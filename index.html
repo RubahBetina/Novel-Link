@@ -86,7 +86,6 @@
             border-color: #00f2fe;
             box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
         }
-
         /* --- NOTIFIKASI / WELCOME BANNER --- */
         .welcome-banner {
             background: rgba(11, 19, 43, 0.65);
@@ -129,7 +128,6 @@
         .banner-toggle-indicator.visible {
             display: block;
         }
-
         .container {
             width: 92%;
             max-width: 1200px;
@@ -155,7 +153,6 @@
             border-left: 6px solid #00f2fe;
             box-shadow: 0 4px 10px rgba(0,0,0,0.3);
         }
-
         /* Rak Novel Horizontal Scroll */
         .rak-novel {
             background: rgba(11, 19, 43, 0.75);
@@ -204,32 +201,21 @@
             box-shadow: 0 8px 25px rgba(0, 242, 254, 0.3);
             border: 1px solid rgba(0, 242, 254, 0.6);
         }
-
-        /* Kontainer Pembungkus Cover agar Ukuran & Rasio Seragam */
-        .novel-cover-container {
+        /* Ukuran Poster Cover (Rasio Vertikal) */
+        .novel-cover {
             width: 100%;
             height: 210px;
-            overflow: hidden;
+            object-fit: cover;
             border-radius: 4px;
+            display: block;
+            cursor: pointer;
             background-color: #1a2b4c;
-            margin-bottom: 0;
         }
         @media (min-width: 768px) {
-            .novel-cover-container {
+            .novel-cover {
                 height: 250px;
             }
         }
-
-        /* Ukuran Poster Cover (Rasio Vertikal dengan object-fit) */
-        .novel-cover {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            object-position: center;
-            display: block;
-            cursor: pointer;
-        }
-
         .novel-judul {
             font-size: 13px;
             font-weight: bold;
@@ -245,7 +231,6 @@
                 font-size: 14px;
             }
         }
-
         /* Halaman Peringatan & Hubungi */
         .info-card {
             background: rgba(11, 19, 43, 0.85);
@@ -297,7 +282,6 @@
             transform: translateY(-3px);
             box-shadow: 0 5px 15px rgba(0, 242, 254, 0.4);
         }
-
         /* Modal Pop-up Novel Detail */
         .modal-overlay {
             display: none;
@@ -391,7 +375,6 @@
         .btn-tutup-modal:hover {
             background-color: #dc2626;
         }
-
         /* Footer */
         footer {
             text-align: center;
@@ -405,7 +388,6 @@
     </style>
 </head>
 <body onclick="handleGlobalClick(event)">
-
     <!-- Header dengan Logo Bulat, Kaligrafi NovelLink, & Navigasi -->
     <div class="header-main" id="mainHeader">
         <div class="brand-container">
@@ -418,11 +400,9 @@
             <button class="nav-btn" onclick="gantiTab('hubungi', this)">HUBUNGI</button>
         </div>
     </div>
-
     <!-- Ucapan Selamat Datang / Pop-up Notifikasi -->
     <div class="welcome-banner" id="welcomeBanner"></div>
     <div class="banner-toggle-indicator" id="bannerIndicator" onclick="showBanner(event)">⌄</div>
-
     <div class="container">
         <!-- HALAMAN 1: KUMPULAN NOVEL -->
         <div id="page-novel" class="page-content active">
@@ -437,7 +417,6 @@
                 <div class="rak-novel" id="rakTamat"></div>
             </div>
         </div>
-
         <!-- HALAMAN 2: PERINGATAN (HAK CIPTA) -->
         <div id="page-peringatan" class="page-content">
             <div class="info-card">
@@ -445,7 +424,6 @@
                 <p id="disclaimerContent">Memuat teks peringatan...</p>
             </div>
         </div>
-
         <!-- HALAMAN 3: HUBUNGI (SOSIAL MEDIA DINAMIS) -->
         <div id="page-hubungi" class="page-content">
             <div class="info-card">
@@ -455,7 +433,6 @@
             </div>
         </div>
     </div>
-
     <!-- MODAL POP-UP DETAIL NOVEL -->
     <div id="modalPopup" class="modal-overlay">
         <div class="modal-kotak">
@@ -473,12 +450,10 @@
             </div>
         </div>
     </div>
-
     <!-- FOOTER -->
     <footer>
         © 2026 NovelLink • Dibangun dengan cinta untuk para pembaca setia di bawah langit malam.
     </footer>
-
     <script>
         // Load Pengaturan dari Admin localStorage
         const settings = JSON.parse(localStorage.getItem('novellink_settings')) || {
@@ -487,7 +462,6 @@
             popupText: "Selamat datang pembaca di kumpulan novel milik NovelLink🥰🤗. Silakan pilih cerita mana yang kalian suka.",
             disclaimerText: "Seluruh isi konten, cerita, cover, serta file aplikasi yang terdapat di dalam situs web ini dilindungi oleh hak cipta. Dilarang keras untuk menyalin, mengunggah ulang, memperjualbelikan, atau mendistribusikan materi dari situs ini ke platform lain tanpa izin tertulis dari pemilik."
         };
-
         // Set Judul & Logo Website
         document.getElementById('headerTitle').innerText = settings.siteTitle || "NovelLink";
         if (settings.logoBase64) {
@@ -495,7 +469,6 @@
             logoEl.src = settings.logoBase64;
             logoEl.style.display = 'block';
         }
-
         // Set Welcome Banner
         const bannerEl = document.getElementById('welcomeBanner');
         if (settings.popupText && settings.popupText.trim() !== "") {
@@ -503,10 +476,8 @@
         } else {
             bannerEl.style.display = 'none';
         }
-
         // Set Disclaimer Peringatan
         document.getElementById('disclaimerContent').innerText = settings.disclaimerText;
-
         // Render Social Media Dinamis
         const defaultSocials = [
             { name: "WhatsApp", url: "https://wa.me/" },
@@ -524,7 +495,6 @@
             a.innerHTML = `🔗 ${s.name}`;
             socialGrid.appendChild(a);
         });
-
         function gantiTab(namaHalaman, tombol) {
             let pages = document.querySelectorAll('.page-content');
             pages.forEach(page => page.classList.remove('active'));
@@ -533,7 +503,6 @@
             document.getElementById('page-' + namaHalaman).classList.add('active');
             tombol.classList.add('active');
         }
-
         function handleGlobalClick(event) {
             let banner = document.getElementById('welcomeBanner');
             let indicator = document.getElementById('bannerIndicator');
@@ -546,7 +515,6 @@
                 }
             }
         }
-
         function showBanner(event) {
             event.stopPropagation();
             let banner = document.getElementById('welcomeBanner');
@@ -554,7 +522,6 @@
             banner.classList.remove('collapsed');
             indicator.classList.remove('visible');
         }
-
         // Muat Daftar Novel dari localStorage Admin (Menggunakan Dataset agar aman dari error string/blurb panjang)
         function muatNovel() {
             let defaultNovel = [
@@ -579,18 +546,12 @@
             
             containerOngoing.innerHTML = '';
             containerTamat.innerHTML = '';
-
             dataNovel.forEach(novel => {
                 let linkTarget = novel.link ? novel.link : "#";
                 let coverImg = novel.cover ? novel.cover : 'https://via.placeholder.com/150x220/1e3a8a/00f2fe?text=Cover';
                 
                 let itemDiv = document.createElement('div');
                 itemDiv.className = 'novel-item';
-
-                // Kontainer Pembungkus Cover (Kunci agar ukuran rapi & seragam)
-                let coverContainer = document.createElement('div');
-                coverContainer.className = 'novel-cover-container';
-
                 let imgEl = document.createElement('img');
                 imgEl.src = coverImg;
                 imgEl.alt = "Cover";
@@ -602,7 +563,6 @@
                 imgEl.dataset.app = novel.app || "-";
                 imgEl.dataset.synopsis = novel.synopsis || "Deskripsi belum tersedia.";
                 imgEl.dataset.link = linkTarget;
-
                 // Event listener ketika cover diklik
                 imgEl.addEventListener('click', function() {
                     bukaModal(
@@ -613,23 +573,17 @@
                         this.dataset.link
                     );
                 });
-
-                coverContainer.appendChild(imgEl);
-
                 let pEl = document.createElement('p');
                 pEl.className = 'novel-judul';
                 pEl.innerText = novel.title;
-
-                itemDiv.appendChild(coverContainer);
+                itemDiv.appendChild(imgEl);
                 itemDiv.appendChild(pEl);
-
                 if (novel.status && novel.status.toLowerCase() === 'completed') {
                     containerTamat.appendChild(itemDiv);
                 } else {
                     containerOngoing.appendChild(itemDiv);
                 }
             });
-
             if (containerOngoing.innerHTML === '') {
                 containerOngoing.innerHTML = '<p style="color: #94a3b8; padding: 10px; width: 100%; text-align: center;">Belum ada novel ongoing.</p>';
             }
@@ -637,7 +591,6 @@
                 containerTamat.innerHTML = '<p style="color: #94a3b8; padding: 10px; width: 100%; text-align: center;">Belum ada novel tamat.</p>';
             }
         }
-
         function bukaModal(judul, genre, app, deskripsi, linkBaca) {
             document.getElementById('modalJudul').innerText = judul;
             document.getElementById('modalGenre').innerText = genre;
@@ -651,7 +604,6 @@
                 modal.classList.add('active');
             }, 10);
         }
-
         function tutupModal() {
             let modal = document.getElementById('modalPopup');
             modal.classList.remove('active');
@@ -659,7 +611,6 @@
                 modal.style.display = 'none';
             }, 300);
         }
-
         window.onload = muatNovel;
     </script>
 </body>
