@@ -1,0 +1,605 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>NovelLink - Koleksi Cerita Terbaik</title>
+    <!-- Import font kaligrafi (Dancing Script dari Google Fonts) -->
+    <link href="https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
+    <style>
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 0;
+            padding: 0;
+            background: linear-gradient(-45deg, #00f2fe, #4facfe, #1e3a8a, #0b132b, #000000);
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite;
+            color: #e0e6ed;
+            min-height: 100vh;
+        }
+
+        a { text-decoration: none; color: inherit; }
+        
+        /* Header & Navigasi Bar */
+        .header-main {
+            background: rgba(11, 19, 43, 0.85);
+            backdrop-filter: blur(10px);
+            color: #ffffff;
+            text-align: center;
+            padding: 20px 15px;
+            border-bottom: 3px solid #00f2fe;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.6);
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        /* Container Logo Bulat + Tulisan Kaligrafi */
+        .brand-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            margin-bottom: 15px;
+        }
+
+        .brand-logo {
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid #00f2fe;
+            box-shadow: 0 0 10px rgba(0, 242, 254, 0.5);
+            background-color: #162447;
+        }
+
+        .header-main h1 { 
+            margin: 0; 
+            font-family: 'Dancing Script', cursive;
+            font-size: clamp(36px, 6vw, 48px); 
+            letter-spacing: 1px; 
+            color: #00f2fe;
+            text-shadow: 0 0 15px rgba(0, 242, 254, 0.6);
+        }
+
+        /* Menu Bar Navigasi */
+        .nav-menu {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            background: rgba(26, 43, 76, 0.8);
+            color: #cbd5e1;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            padding: 8px 18px;
+            border-radius: 20px;
+            font-size: 14px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .nav-btn:hover, .nav-btn.active {
+            background: #00f2fe;
+            color: #0b132b;
+            border-color: #00f2fe;
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.5);
+        }
+
+        /* --- NOTIFIKASI / WELCOME BANNER --- */
+        .welcome-banner {
+            background: rgba(11, 19, 43, 0.65);
+            backdrop-filter: blur(8px);
+            border-bottom: 1px solid rgba(0, 242, 254, 0.3);
+            color: #f1f5f9;
+            text-align: center;
+            padding: 14px 20px;
+            font-size: 14px;
+            line-height: 1.5;
+            box-shadow: inset 0 -5px 15px rgba(0,0,0,0.2);
+            overflow: hidden;
+            transition: max-height 0.4s ease, opacity 0.3s ease, padding 0.4s ease;
+            max-height: 150px;
+            opacity: 1;
+            cursor: pointer;
+        }
+
+        .welcome-banner.collapsed {
+            max-height: 0;
+            padding-top: 0;
+            padding-bottom: 0;
+            opacity: 0;
+            border-bottom: none;
+        }
+
+        /* --- INDIKATOR / TOMBOL PANAH KECIL --- */
+        .banner-toggle-indicator {
+            background: rgba(11, 19, 43, 0.9);
+            color: #00f2fe;
+            text-align: center;
+            padding: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            border-bottom: 1px solid rgba(0, 242, 254, 0.2);
+            display: none;
+            transition: background 0.2s ease;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+        }
+
+        .banner-toggle-indicator:hover {
+            background: rgba(0, 242, 254, 0.15);
+        }
+
+        .banner-toggle-indicator.visible {
+            display: block;
+        }
+
+        .container {
+            width: 92%;
+            max-width: 1200px;
+            margin: 30px auto;
+        }
+
+        /* Sistem Halaman (Tab Content) */
+        .page-content {
+            display: none;
+        }
+        .page-content.active {
+            display: block;
+        }
+
+        .section-kategori {
+            margin-bottom: 40px;
+        }
+
+        .menu-bar-kategori {
+            background: rgba(15, 23, 42, 0.9);
+            color: #ffffff;
+            padding: 12px 18px;
+            font-size: clamp(16px, 3vw, 20px);
+            font-weight: bold;
+            border-radius: 6px 6px 0 0;
+            border-left: 6px solid #00f2fe;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        /* Rak Novel Horizontal Scroll */
+        .rak-novel {
+            background: rgba(11, 19, 43, 0.75);
+            backdrop-filter: blur(12px);
+            padding: 20px 15px;
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            display: flex;
+            gap: 15px;
+            overflow-x: auto;
+            scroll-behavior: smooth;
+            -webkit-overflow-scrolling: touch;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+        }
+
+        .rak-novel::-webkit-scrollbar {
+            height: 6px;
+        }
+        .rak-novel::-webkit-scrollbar-track {
+            background: rgba(11, 19, 43, 0.5);
+            border-radius: 4px;
+        }
+        .rak-novel::-webkit-scrollbar-thumb {
+            background: rgba(0, 242, 254, 0.4);
+            border-radius: 4px;
+        }
+        .rak-novel::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 242, 254, 0.8);
+        }
+
+        .novel-item {
+            background: rgba(26, 43, 76, 0.6);
+            padding: 10px;
+            border-radius: 6px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.4);
+            text-align: center;
+            flex: 0 0 140px;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        
+        @media (min-width: 768px) {
+            .novel-item {
+                flex: 0 0 170px;
+            }
+        }
+
+        .novel-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 25px rgba(0, 242, 254, 0.3);
+            border: 1px solid rgba(0, 242, 254, 0.6);
+        }
+
+        .novel-cover {
+            width: 100%;
+            height: 200px;
+            object-fit: cover;
+            border-radius: 4px;
+            display: block;
+            cursor: pointer;
+        }
+        
+        @media (min-width: 768px) {
+            .novel-cover {
+                height: 230px;
+            }
+        }
+
+        .novel-judul {
+            font-size: 13px;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 0;
+            color: #f1f5f9;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        @media (min-width: 768px) {
+            .novel-judul {
+                font-size: 14px;
+            }
+        }
+
+        /* Halaman Peringatan & Hubungi */
+        .info-card {
+            background: rgba(11, 19, 43, 0.85);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(0, 242, 254, 0.3);
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            max-width: 700px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .info-card h2 {
+            color: #00f2fe;
+            margin-top: 0;
+            font-size: 24px;
+            border-bottom: 1px solid #1f4068;
+            padding-bottom: 15px;
+        }
+
+        .info-card p {
+            color: #cbd5e1;
+            font-size: 15px;
+            line-height: 1.8;
+            text-align: justify;
+        }
+
+        .social-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+            gap: 15px;
+            margin-top: 25px;
+        }
+
+        .social-btn {
+            background: rgba(26, 43, 76, 0.8);
+            border: 1px solid rgba(0, 242, 254, 0.4);
+            padding: 15px;
+            border-radius: 6px;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            transition: all 0.2s ease;
+        }
+
+        .social-btn:hover {
+            background: #00f2fe;
+            color: #0b132b;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 242, 254, 0.4);
+        }
+
+        /* Modal Pop-up */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0);
+            z-index: 9999;
+            justify-content: center;
+            align-items: center;
+            padding: 15px;
+            box-sizing: border-box;
+            transition: background-color 0.3s ease;
+        }
+
+        .modal-overlay.active {
+            display: flex;
+            background-color: rgba(0, 0, 0, 0.85);
+        }
+
+        .modal-kotak {
+            background: linear-gradient(145deg, #162447, #0b132b);
+            color: #ffffff;
+            width: 100%;
+            max-width: 420px;
+            padding: 25px;
+            border-radius: 10px;
+            border: 2px solid #00f2fe;
+            box-shadow: 0 10px 35px rgba(0,242,254,0.3);
+            box-sizing: border-box;
+            transform: scale(0.85) translateY(20px);
+            opacity: 0;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease;
+        }
+
+        .modal-overlay.active .modal-kotak {
+            transform: scale(1) translateY(0);
+            opacity: 1;
+        }
+
+        .modal-kotak h2 {
+            margin-top: 0;
+            color: #00f2fe;
+            font-size: 20px;
+            border-bottom: 1px solid #1f4068;
+            padding-bottom: 10px;
+        }
+
+        .modal-kotak p {
+            font-size: 14px;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 25px;
+        }
+
+        .modal-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .btn-baca-modal {
+            background-color: #00f2fe;
+            color: #0b132b;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            flex: 1;
+            text-align: center;
+            font-size: 14px;
+            display: inline-block;
+            transition: background 0.2s;
+        }
+        .btn-baca-modal:hover {
+            background-color: #38bdf8;
+        }
+
+        .btn-tutup-modal {
+            background-color: #ef4444;
+            color: white;
+            padding: 10px 15px;
+            border-radius: 5px;
+            font-weight: bold;
+            cursor: pointer;
+            border: none;
+            font-size: 14px;
+            transition: background 0.2s;
+        }
+        .btn-tutup-modal:hover {
+            background-color: #dc2626;
+        }
+    </style>
+</head>
+<body onclick="handleGlobalClick(event)">
+
+    <!-- Header dengan Logo Bulat, Kaligrafi NovelLink, & Navigasi -->
+    <div class="header-main" id="mainHeader">
+        <div class="brand-container">
+            <img src="https://via.placeholder.com/80x80/00f2fe/0b132b?text=NL" alt="Logo" class="brand-logo">
+            <h1>NovelLink</h1>
+        </div>
+        <div class="nav-menu">
+            <button class="nav-btn active" onclick="gantiTab('novel', this)">NOVEL</button>
+            <button class="nav-btn" onclick="gantiTab('peringatan', this)">PERINGATAN</button>
+            <button class="nav-btn" onclick="gantiTab('hubungi', this)">HUBUNGI</button>
+        </div>
+    </div>
+
+    <!-- Ucapan Selamat Datang (Transparan, Rata Tengah) -->
+    <div class="welcome-banner" id="welcomeBanner">
+        Selamat datang pembaca di kumpulan novel milik Koran Meikarta🥰🤗. Silakan pilih cerita mana yang kalian suka.
+    </div>
+
+    <!-- Indikator Panah Kecil untuk Memunculkan Kembali Banner -->
+    <div class="banner-toggle-indicator" id="bannerIndicator" onclick="showBanner(event)">
+        ⌄
+    </div>
+
+    <div class="container">
+        
+        <!-- HALAMAN 1: KUMPULAN NOVEL -->
+        <div id="page-novel" class="page-content active">
+            <!-- KATEGORI ONGOING -->
+            <div class="section-kategori">
+                <div class="menu-bar-kategori">Novel Ongoing (Sedang Berjalan)</div>
+                <div class="rak-novel" id="rakOngoing"></div>
+            </div>
+
+            <!-- KATEGORI TAMAT -->
+            <div class="section-kategori">
+                <div class="menu-bar-kategori" style="border-left-color: #38bdf8;">Novel Tamat (Completed)</div>
+                <div class="rak-novel" id="rakTamat"></div>
+            </div>
+        </div>
+
+        <!-- HALAMAN 2: PERINGATAN (HAK CIPTA) -->
+        <div id="page-peringatan" class="page-content">
+            <div class="info-card">
+                <h2>Pemberitahuan Hak Cipta (Copyright)</h2>
+                <p>Seluruh isi konten, cerita, cover, serta file aplikasi yang terdapat di dalam situs web ini dilindungi oleh hak cipta. Dilarang keras untuk menyalin, mengunggah ulang, memperjualbelikan, atau mendistribusikan materi dari situs ini ke platform lain tanpa izin tertulis dari pemilik.</p>
+                <p>Hargai kerja keras pembuat dengan cara menikmati karya melalui tautan resmi yang telah disediakan. Jangan mencuri atau mengambil hak milik orang lain!</p>
+            </div>
+        </div>
+
+        <!-- HALAMAN 3: HUBUNGI (SOSIAL MEDIA) -->
+        <div id="page-hubungi" class="page-content">
+            <div class="info-card">
+                <h2>Hubungi Kami</h2>
+                <p style="text-align: center;">Punya pertanyaan, kritik, saran, atau menemukan kendala? Silakan kunjungi sosial media resmi di bawah ini:</p>
+                
+                <div class="social-grid">
+                    <a href="https://t.me/username_lo" target="_blank" class="social-btn">💬 Telegram</a>
+                    <a href="https://instagram.com/username_lo" target="_blank" class="social-btn">📸 Instagram</a>
+                    <a href="https://youtube.com/@username_lo" target="_blank" class="social-btn">▶️ YouTube</a>
+                    <a href="https://tiktok.com/@username_lo" target="_blank" class="social-btn">🎵 TikTok</a>
+                    <a href="mailto:email@domain.com" class="social-btn">✉️ Email</a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- MODAL POP-UP -->
+    <div id="modalPopup" class="modal-overlay">
+        <div class="modal-kotak">
+            <h2 id="modalJudul">Judul Buku</h2>
+            <p id="modalDeskripsi">Deskripsi buku...</p>
+            <div class="modal-buttons">
+                <a href="#" id="btnBaca" class="btn-baca-modal" target="_blank">BACA SEKARANG</a>
+                <button class="btn-tutup-modal" onclick="tutupModal()">Tutup</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function gantiTab(namaHalaman, tombol) {
+            let pages = document.querySelectorAll('.page-content');
+            pages.forEach(page => page.classList.remove('active'));
+
+            let buttons = document.querySelectorAll('.nav-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+
+            document.getElementById('page-' + namaHalaman).classList.add('active');
+            tombol.classList.add('active');
+        }
+
+        function handleGlobalClick(event) {
+            let banner = document.getElementById('welcomeBanner');
+            let indicator = document.getElementById('bannerIndicator');
+            let header = document.getElementById('mainHeader');
+            let modal = document.getElementById('modalPopup');
+
+            if (!banner.classList.contains('collapsed')) {
+                if (!header.contains(event.target) && !modal.classList.contains('active')) {
+                    banner.classList.add('collapsed');
+                    indicator.classList.add('visible');
+                }
+            }
+        }
+
+        function showBanner(event) {
+            event.stopPropagation();
+            let banner = document.getElementById('welcomeBanner');
+            let indicator = document.getElementById('bannerIndicator');
+            
+            banner.classList.remove('collapsed');
+            indicator.classList.remove('visible');
+        }
+
+        function muatNovel() {
+            let defaultNovel = [
+                {
+                    judul: "Jejak Langkah Waktu",
+                    kategori: "ongoing",
+                    deskripsi: "Seorang pemuda yang terbangun di masa depan dan harus mencari jalan pulang sebelum terjebak selamanya di dimensi gelap.",
+                    cover: "https://via.placeholder.com/150x220/1e3a8a/00f2fe?text=Novel+1",
+                    linkBaca: "https://example.com/download-apk-novel-1"
+                },
+                {
+                    judul: "Misteri Di Ujung Senja",
+                    kategori: "ongoing",
+                    deskripsi: "Kumpulan kisah detektif amatir yang memecahkan teka-teki janggal dan kasus misterius di sebuah kota kecil.",
+                    cover: "https://via.placeholder.com/150x220/1e3a8a/00f2fe?text=Novel+2",
+                    linkBaca: "https://example.com/download-apk-novel-2"
+                },
+                {
+                    judul: "Cinta di Musim Semi",
+                    kategori: "tamat",
+                    deskripsi: "Kisah romantis dua insan yang dipertemukan kembali setelah terpisah selama sepuluh tahun akibat kesalahpahaman.",
+                    cover: "https://via.placeholder.com/150x220/1b263b/38bdf8?text=Novel+3",
+                    linkBaca: "https://example.com/download-apk-novel-3"
+                }
+            ];
+
+            let dataNovel = JSON.parse(localStorage.getItem('daftarNovel'));
+            if (!dataNovel || dataNovel.length === 0) {
+                dataNovel = defaultNovel;
+                localStorage.setItem('daftarNovel', JSON.stringify(defaultNovel));
+            }
+            
+            let containerOngoing = document.getElementById('rakOngoing');
+            let containerTamat = document.getElementById('rakTamat');
+            
+            containerOngoing.innerHTML = '';
+            containerTamat.innerHTML = '';
+
+            dataNovel.forEach(novel => {
+                let linkTarget = novel.linkBaca ? novel.linkBaca : "#";
+                
+                let htmlItem = `
+                    <div class="novel-item">
+                        <img src="${novel.cover}" alt="Cover" class="novel-cover" onclick="bukaModal('${novel.judul.replace(/'/g, "\\'")}', '${novel.deskripsi.replace(/'/g, "\\'")}', '${linkTarget}')">
+                        <p class="novel-judul">${novel.judul}</p>
+                    </div>
+                `;
+
+                if(novel.kategori === 'ongoing') {
+                    containerOngoing.innerHTML += htmlItem;
+                } else {
+                    containerTamat.innerHTML += htmlItem;
+                }
+            });
+        }
+
+        function bukaModal(judul, deskripsi, linkBaca) {
+            document.getElementById('modalJudul').innerText = judul;
+            document.getElementById('modalDeskripsi').innerText = deskripsi;
+            document.getElementById('btnBaca').href = linkBaca;
+            
+            let modal = document.getElementById('modalPopup');
+            modal.style.display = 'flex';
+            setTimeout(() => {
+                modal.classList.add('active');
+            }, 10);
+        }
+
+        function tutupModal() {
+            let modal = document.getElementById('modalPopup');
+            modal.classList.remove('active');
+            setTimeout(() => {
+                modal.style.display = 'none';
+            }, 300);
+        }
+
+        window.onload = muatNovel;
+    </script>
+</body>
+</html>
