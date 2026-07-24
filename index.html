@@ -6,10 +6,10 @@
     <title>NovelLink - Koleksi Novel Pilihan</title>
     <style>
         :root {
-            --primary-color: #6366f1;
-            --bg-color: #0f172a;
-            --card-bg: #1e293b;
-            --text-color: #f8fafc;
+            --primary-color: #00f2fe;
+            --bg-color: #0b132b;
+            --card-bg: #1c2541;
+            --text-color: #ffffff;
             --text-secondary: #94a3b8;
         }
 
@@ -43,58 +43,53 @@
             font-size: 0.95rem;
         }
 
-        /* Grid Layout untuk Novel */
         .novel-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
             gap: 16px;
             max-width: 1200px;
             margin: 0 auto;
         }
 
-        /* Kartu Novel */
         .novel-card {
             background-color: var(--card-bg);
             border-radius: 12px;
             overflow: hidden;
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
-            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
             cursor: pointer;
             display: flex;
             flex-direction: column;
+            transition: transform 0.2s ease;
         }
 
         .novel-card:hover {
             transform: translateY(-4px);
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3);
         }
 
-        /* Bagian Cover - Ukuran seragam & tidak gepeng */
         .novel-cover-container {
             width: 100%;
-            height: 230px; /* Tinggi seragam untuk semua cover */
-            background-color: #334155;
+            height: 220px;
+            background-color: #28385e;
             overflow: hidden;
         }
 
         .novel-cover-container img {
             width: 100%;
             height: 100%;
-            object-fit: cover; /* Kunci agar gambar pas dan tidak gepeng */
+            object-fit: cover;
             object-position: center;
         }
 
-        /* Informasi Novel di Card */
         .novel-info {
             padding: 12px;
             display: flex;
             flex-direction: column;
-            flex-grow: 1;
             justify-content: space-between;
+            flex-grow: 1;
         }
 
         .novel-title {
-            font-size: 0.95rem;
+            font-size: 0.9rem;
             font-weight: 600;
             margin-bottom: 6px;
             color: var(--text-color);
@@ -107,9 +102,181 @@
         .novel-genre {
             font-size: 0.75rem;
             color: var(--primary-color);
-            background: rgba(99, 102, 241, 0.1);
+            background: rgba(0, 242, 254, 0.1);
             padding: 3px 8px;
             border-radius: 6px;
+            align-self: flex-start;
+            font-weight: 500;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            padding: 16px;
+        }
+
+        .modal-content {
+            background-color: var(--card-bg);
+            border-radius: 16px;
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            position: relative;
+            text-align: center;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.5);
+        }
+
+        .close-btn {
+            position: absolute;
+            right: 15px;
+            top: 15px;
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-cover {
+            width: 120px;
+            height: 170px;
+            object-fit: cover;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .modal-title {
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 6px;
+        }
+
+        .modal-genre {
+            font-size: 0.85rem;
+            color: var(--primary-color);
+            margin-bottom: 10px;
+        }
+
+        .modal-synopsis {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            text-align: left;
+            margin-bottom: 20px;
+            max-height: 120px;
+            overflow-y: auto;
+            line-height: 1.4;
+        }
+
+        .btn-baca {
+            display: block;
+            width: 100%;
+            background-color: var(--primary-color);
+            color: #0b132b;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-weight: 700;
+        }
+
+        .empty-message {
+            grid-column: 1 / -1;
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 40px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>NovelLink</h1>
+        <p>Temukan cerita dan novel menarik pilihanmu</p>
+    </header>
+
+    <main class="novel-grid" id="novelGrid">
+        <!-- Novel dimuat dari localStorage -->
+    </main>
+
+    <div class="modal" id="novelModal">
+        <div class="modal-content">
+            <button class="close-btn" id="closeModal">&times;</button>
+            <img id="modalCover" class="modal-cover" src="" alt="Cover">
+            <h2 id="modalTitle" class="modal-title"></h2>
+            <div id="modalGenre" class="modal-genre"></div>
+            <p id="modalSynopsis" class="modal-synopsis"></p>
+            <a id="modalLink" href="#" target="_blank" class="btn-baca">BACA SEKARANG</a>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            const novelGrid = document.getElementById("novelGrid");
+            const novelModal = document.getElementById("novelModal");
+            const closeModal = document.getElementById("closeModal");
+            
+            const modalCover = document.getElementById("modalCover");
+            const modalTitle = document.getElementById("modalTitle");
+            const modalGenre = document.getElementById("modalGenre");
+            const modalSynopsis = document.getElementById("modalSynopsis");
+            const modalLink = document.getElementById("modalLink");
+
+            const novels = JSON.parse(localStorage.getItem("novels")) || [];
+
+            if (novels.length === 0) {
+                novelGrid.innerHTML = `<div class="empty-message">Belum ada novel yang ditambahkan. Silakan tambahkan melalui halaman admin.</div>`;
+                return;
+            }
+
+            novels.forEach((novel) => {
+                const card = document.createElement("div");
+                card.className = "novel-card";
+                
+                card.innerHTML = `
+                    <div class="novel-cover-container">
+                        <img src="${novel.cover || ''}" alt="${novel.title}">
+                    </div>
+                    <div class="novel-info">
+                        <div class="novel-title">${novel.title}</div>
+                        <div class="novel-genre">${novel.genre || 'Umum'}</div>
+                    </div>
+                `;
+
+                card.addEventListener("click", () => {
+                    modalCover.src = novel.cover || '';
+                    modalTitle.textContent = novel.title;
+                    modalGenre.textContent = novel.genre || 'Umum';
+                    modalSynopsis.textContent = novel.synopsis || 'Tidak ada sinopsis.';
+                    modalLink.href = novel.link || "#";
+                    novelModal.style.display = "flex";
+                });
+
+                novelGrid.appendChild(card);
+            });
+
+            closeModal.addEventListener("click", () => {
+                novelModal.style.display = "none";
+            });
+
+            window.addEventListener("click", (e) => {
+                if (e.target === novelModal) {
+                    novelModal.style.display = "none";
+                }
+            });
+        });
+    </script>
+</body>
+</html>            border-radius: 6px;
             align-self: flex-start;
             font-weight: 500;
         }
