@@ -224,7 +224,8 @@
     </style>
 </head>
 <body>
-    <!-- 1. SECTION LOGIN (Tampil jika belum login) -->
+
+    <!-- 1. SECTION LOGIN -->
     <div class="container" id="loginSection">
         <section style="max-width: 400px; margin: 80px auto;">
             <h2>Admin Login NovelLink</h2>
@@ -242,7 +243,8 @@
             </form>
         </section>
     </div>
-    <!-- 2. MAIN DASHBOARD ADMIN (Tampil setelah login) -->
+
+    <!-- 2. MAIN DASHBOARD ADMIN -->
     <div class="container hidden" id="adminDashboard">
         <header>
             <h1>NovelLink Admin Panel</h1>
@@ -251,6 +253,7 @@
                 <button class="btn btn-danger" onclick="handleLogout()">Logout</button>
             </div>
         </header>
+
         <!-- PENGATURAN WEBSITE & LOGO -->
         <section>
             <h2>Pengaturan Website & Logo</h2>
@@ -267,6 +270,7 @@
                 <button type="submit" class="btn">Simpan Pengaturan Website</button>
             </form>
         </section>
+
         <!-- MANAJEMEN MEDIA SOSIAL & KONTAK -->
         <section>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -275,6 +279,7 @@
             </div>
             <div class="admin-list" id="socialAdminList"></div>
         </section>
+
         <!-- PENGATURAN POP-UP NOTIFIKASI -->
         <section>
             <h2>Pengumuman / Pop-Up Notifikasi</h2>
@@ -286,6 +291,7 @@
                 <button type="submit" class="btn">Simpan Pop-Up</button>
             </form>
         </section>
+
         <!-- PENGATURAN PERINGATAN / HAK CIPTA -->
         <section>
             <h2>Pemberitahuan Hak Cipta & Peringatan</h2>
@@ -297,6 +303,7 @@
                 <button type="submit" class="btn">Simpan Peringatan</button>
             </form>
         </section>
+
         <!-- MANAJEMEN NOVEL -->
         <section>
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
@@ -306,6 +313,7 @@
             <div class="admin-list" id="novelAdminList"></div>
         </section>
     </div>
+
     <!-- MODAL TAMBAH / EDIT MEDIA SOSIAL -->
     <div class="modal" id="socialModal">
         <div class="modal-content">
@@ -330,6 +338,7 @@
             </form>
         </div>
     </div>
+
     <!-- MODAL TAMBAH / EDIT NOVEL -->
     <div class="modal" id="novelModal">
         <div class="modal-content">
@@ -382,15 +391,20 @@
             </form>
         </div>
     </div>
+
     <div class="toast" id="toastMsg">Perubahan berhasil disimpan!</div>
+
     <script>
-        // --- INISIALISASI SUPABASE DENGAN KEY ASLI ---
+        // --- INISIALISASI SUPABASE ---
         const SUPABASE_URL = 'https://azqghdrvbzauwavkeypt.supabase.co';
         const SUPABASE_ANON_KEY = 'sb_publishable_0gfmGBWUDodZwDuYofydmg_JQL-7zNa';
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
         let currentLogoFile = null;
         let currentCoverFile = null;
+        let existingLogoUrl = ""; // Menyimpan URL logo lama agar tidak hilang jika tidak diganti
+
         // --- CEK SESI OTENTIKASI ---
         async function checkAuth() {
             const { data: { session } } = await _supabase.auth.getSession();
@@ -404,9 +418,11 @@
             }
         }
         checkAuth();
+
         _supabase.auth.onAuthStateChange((event, session) => {
             checkAuth();
         });
+
         async function handleLogin(e) {
             e.preventDefault();
             const email = document.getElementById('loginEmail').value;
@@ -418,21 +434,25 @@
                 errorEl.textContent = error.message;
             }
         }
+
         async function handleLogout() {
             await _supabase.auth.signOut();
         }
+
         function showToast(msg) {
             const t = document.getElementById('toastMsg');
             t.innerText = msg;
             t.style.display = 'block';
             setTimeout(() => { t.style.display = 'none'; }, 2500);
         }
+
         // --- LOAD DATA DARI SUPABASE ---
         async function loadAllData() {
             await loadSettings();
             await loadSocials();
             await loadNovels();
         }
+
         // 1. Settings & Logo
         async function loadSettings() {
             const { data, error } = await _supabase.from('settings').select('*').limit(1).single();
@@ -441,12 +461,14 @@
                 document.getElementById('popupText').value = data.popup_text || "";
                 document.getElementById('disclaimerText').value = data.disclaimer_text || "";
                 if (data.logo_url) {
+                    existingLogoUrl = data.logo_url; // Simpan URL logo aktif
                     const prev = document.getElementById('logoPreview');
                     prev.src = data.logo_url;
                     prev.style.display = 'block';
                 }
             }
         }
+
         function previewLogoImage(event) {
             const file = event.target.files[0];
             if (file) {
@@ -456,17 +478,22 @@
                 prev.style.display = 'block';
             }
         }
+
         async function saveSettings(e) {
             e.preventDefault();
-            let logoUrl = document.getElementById('logoPreview').src;
+            let logoUrl = existingLogoUrl; // Default ke logo lama
+
             if (currentLogoFile) {
                 const fileName = `logo_${Date.now()}.${currentLogoFile.name.split('.').pop()}`;
                 const { error: uploadError } = await _supabase.storage.from('covers').upload(fileName, currentLogoFile);
-                if (!uploadError) {
-                    const { data } = _supabase.storage.from('covers').getPublicUrl(fileName);
-                    logoUrl = data.publicUrl;
+                if (uploadError) {
+                    alert('Gagal upload logo: ' + uploadError.message);
+                    return;
                 }
+                const { data } = _supabase.storage.from('covers').getPublicUrl(fileName);
+                logoUrl = data.publicUrl;
             }
+
             const payload = {
                 id: 1,
                 site_title: document.getElementById('siteTitle').value,
@@ -474,13 +501,17 @@
                 popup_text: document.getElementById('popupText').value,
                 disclaimer_text: document.getElementById('disclaimerText').value
             };
+
             const { error } = await _supabase.from('settings').upsert(payload);
             if (error) {
                 alert('Gagal menyimpan: ' + error.message);
             } else {
+                existingLogoUrl = logoUrl; // Perbarui state logo lama
+                currentLogoFile = null; // Reset file object
                 showToast("Pengaturan website berhasil disimpan!");
             }
         }
+
         async function savePopup(e) {
             e.preventDefault();
             const { error } = await _supabase.from('settings').upsert({
@@ -489,6 +520,7 @@
             }, { onConflict: 'id' });
             if (!error) showToast("Pop-up berhasil disimpan!");
         }
+
         async function saveDisclaimer(e) {
             e.preventDefault();
             const { error } = await _supabase.from('settings').upsert({
@@ -497,6 +529,7 @@
             }, { onConflict: 'id' });
             if (!error) showToast("Disclaimer berhasil disimpan!");
         }
+
         // 2. Social Links
         async function loadSocials() {
             const { data } = await _supabase.from('social_links').select('*').order('id', { ascending: true });
@@ -511,38 +544,42 @@
                 div.className = 'admin-item';
                 div.innerHTML = `
                     <div class="admin-info">
-                        <h3>${item.name}</h3>
+                        <h3>${item.platform}</h3>
                         <p>${item.url}</p>
                     </div>
                     <div class="admin-actions">
-                        <button class="btn btn-secondary" onclick="openEditSocialModal(${item.id}, '${item.name}', '${item.url}')">Edit</button>
+                        <button class="btn btn-secondary" onclick="openEditSocialModal(${item.id}, '${item.platform}', '${item.url}')">Edit</button>
                         <button class="btn btn-danger" onclick="deleteSocialItem(${item.id})">Hapus</button>
                     </div>
                 `;
                 listEl.appendChild(div);
             });
         }
+
         function openAddSocialModal() {
             document.getElementById('socialModalTitle').innerText = "Tambah Media Sosial";
             document.getElementById('socialId').value = "";
             document.getElementById('socialFormModal').reset();
             document.getElementById('socialModal').style.display = 'flex';
         }
-        function openEditSocialModal(id, name, url) {
+
+        function openEditSocialModal(id, platform, url) {
             document.getElementById('socialModalTitle').innerText = "Edit Media Sosial";
             document.getElementById('socialId').value = id;
-            document.getElementById('socialName').value = name;
+            document.getElementById('socialName').value = platform;
             document.getElementById('socialLinkUrl').value = url;
             document.getElementById('socialModal').style.display = 'flex';
         }
+
         function closeSocialModal() {
             document.getElementById('socialModal').style.display = 'none';
         }
+
         async function saveSocialItem(e) {
             e.preventDefault();
             const id = document.getElementById('socialId').value;
             const socialData = {
-                name: document.getElementById('socialName').value,
+                platform: document.getElementById('socialName').value,
                 url: document.getElementById('socialLinkUrl').value
             };
             if (id === "") {
@@ -554,6 +591,7 @@
             loadSocials();
             showToast("Media sosial diperbarui!");
         }
+
         async function deleteSocialItem(id) {
             if (confirm("Yakin ingin menghapus media sosial ini?")) {
                 await _supabase.from('social_links').delete().eq('id', id);
@@ -561,6 +599,7 @@
                 showToast("Media sosial dihapus.");
             }
         }
+
         // 3. Novels Management
         async function loadNovels() {
             const { data } = await _supabase.from('novel').select('*').order('id', { ascending: false });
@@ -576,7 +615,7 @@
                 item.innerHTML = `
                     <div class="admin-info">
                         <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent);">[${novel.status}]</span></h3>
-                        <p>Genre: ${novel.genre || '-'} • App: ${novel.app || '-'}</p>
+                        <p>Link: ${novel.link || '-'}</p>
                     </div>
                     <div class="admin-actions">
                         <button class="btn btn-secondary" onclick='openEditNovelModal(${JSON.stringify(novel)})'>Edit</button>
@@ -586,6 +625,7 @@
                 listEl.appendChild(item);
             });
         }
+
         function openAddNovelModal() {
             document.getElementById('novelModalTitle').innerText = "Tambah Novel Baru";
             document.getElementById('novelId').value = "";
@@ -594,15 +634,14 @@
             currentCoverFile = null;
             document.getElementById('novelModal').style.display = 'flex';
         }
+
         function openEditNovelModal(novel) {
             document.getElementById('novelModalTitle').innerText = "Edit Novel";
             document.getElementById('novelId').value = novel.id;
             document.getElementById('novelTitle').value = novel.title;
-            document.getElementById('novelGenre').value = novel.genre;
             document.getElementById('novelStatus').value = novel.status;
-            document.getElementById('novelApp').value = novel.app || "";
-            document.getElementById('novelSynopsis').value = novel.synopsis;
-            document.getElementById('novelLink').value = novel.link;
+            document.getElementById('novelSynopsis').value = novel.description || novel.blurb || "";
+            document.getElementById('novelLink').value = novel.link || "";
             currentCoverFile = null;
             const preview = document.getElementById('imgPreview');
             if (novel.cover_url) {
@@ -613,9 +652,11 @@
             }
             document.getElementById('novelModal').style.display = 'flex';
         }
+
         function closeNovelModal() {
             document.getElementById('novelModal').style.display = 'none';
         }
+
         function previewImage(event) {
             const file = event.target.files[0];
             if (file) {
@@ -625,6 +666,7 @@
                 preview.style.display = 'block';
             }
         }
+
         async function saveNovel(e) {
             e.preventDefault();
             const id = document.getElementById('novelId').value;
@@ -639,15 +681,15 @@
                 const { data } = _supabase.storage.from('covers').getPublicUrl(fileName);
                 coverUrl = data.publicUrl;
             }
+
             const novelData = {
                 title: document.getElementById('novelTitle').value,
-                genre: document.getElementById('novelGenre').value,
                 status: document.getElementById('novelStatus').value,
-                app: document.getElementById('novelApp').value,
                 cover_url: coverUrl,
-                synopsis: document.getElementById('novelSynopsis').value,
+                description: document.getElementById('novelSynopsis').value,
                 link: document.getElementById('novelLink').value
             };
+
             if (id === "") {
                 await _supabase.from('novel').insert([novelData]);
             } else {
@@ -657,6 +699,7 @@
             loadNovels();
             showToast("Data novel berhasil disimpan ke database!");
         }
+
         async function deleteNovel(id) {
             if (confirm("Yakin ingin menghapus novel ini?")) {
                 await _supabase.from('novel').delete().eq('id', id);
@@ -664,8 +707,9 @@
                 showToast("Novel berhasil dihapus.");
             }
         }
+
         function exportData() {
-            alert("Fitur backup langsung dari Supabase bisa diunduh langsung melalui Dashboard Supabase SQL Editor atau Table Editor.");
+            alert("Fitur backup langsung dari Supabase bisa diunduh melalui Dashboard Supabase SQL Editor atau Table Editor.");
         }
     </script>
 </body>
