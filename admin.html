@@ -1,0 +1,1277 @@
+<!DOCTYPE html>
+
+<html lang="id">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Admin Panel - NovelLink</title>
+
+    <style>
+
+        :root {
+
+            --bg-color: #0f172a;
+
+            --card-bg: #1e293b;
+
+            --border-color: #334155;
+
+            --text-main: #f8fafc;
+
+            --text-muted: #94a3b8;
+
+            --accent: #38bdf8;
+
+            --accent-hover: #0ea5e9;
+
+            --danger: #f43f5e;
+
+            --danger-hover: #e11d48;
+
+        }
+
+        * {
+
+            box-sizing: border-box;
+
+            margin: 0;
+
+            padding: 0;
+
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
+        }
+
+        body {
+
+            background-color: var(--bg-color);
+
+            color: var(--text-main);
+
+            padding: 20px;
+
+            line-height: 1.5;
+
+        }
+
+        .container {
+
+            max-width: 900px;
+
+            margin: 0 auto;
+
+        }
+
+        header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 30px;
+
+            border-bottom: 1px solid var(--border-color);
+
+            padding-bottom: 15px;
+
+        }
+
+        h1 {
+
+            font-size: 1.5rem;
+
+            color: var(--accent);
+
+        }
+
+        .btn {
+
+            background-color: var(--accent);
+
+            color: #0f172a;
+
+            border: none;
+
+            padding: 8px 16px;
+
+            border-radius: 6px;
+
+            cursor: pointer;
+
+            font-weight: 600;
+
+            transition: background 0.2s;
+
+        }
+
+        .btn:hover {
+
+            background-color: var(--accent-hover);
+
+        }
+
+        .btn-danger {
+
+            background-color: var(--danger);
+
+            color: #fff;
+
+        }
+
+        .btn-danger:hover {
+
+            background-color: var(--danger-hover);
+
+        }
+
+        .btn-secondary {
+
+            background-color: transparent;
+
+            color: var(--text-muted);
+
+            border: 1px solid var(--border-color);
+
+        }
+
+        .btn-secondary:hover {
+
+            color: var(--text-main);
+
+            border-color: var(--text-main);
+
+        }
+
+        section {
+
+            background-color: var(--card-bg);
+
+            border: 1px solid var(--border-color);
+
+            border-radius: 8px;
+
+            padding: 20px;
+
+            margin-bottom: 25px;
+
+        }
+
+        h2 {
+
+            font-size: 1.1rem;
+
+            margin-bottom: 15px;
+
+            color: var(--text-main);
+
+            display: flex;
+
+            align-items: center;
+
+            gap: 8px;
+
+        }
+
+        .form-group {
+
+            margin-bottom: 15px;
+
+        }
+
+        label {
+
+            display: block;
+
+            font-size: 0.85rem;
+
+            color: var(--text-muted);
+
+            margin-bottom: 5px;
+
+        }
+
+        input[type="text"],
+
+        input[type="url"],
+
+        input[type="file"],
+
+        textarea,
+
+        select {
+
+            width: 100%;
+
+            background-color: #0f172a;
+
+            border: 1px solid var(--border-color);
+
+            border-radius: 6px;
+
+            padding: 10px;
+
+            color: var(--text-main);
+
+            font-size: 0.95rem;
+
+        }
+
+        input:focus, textarea:focus, select:focus {
+
+            outline: none;
+
+            border-color: var(--accent);
+
+        }
+
+        textarea {
+
+            resize: vertical;
+
+            height: 100px;
+
+        }
+
+        .grid-2 {
+
+            display: grid;
+
+            grid-template-columns: 1fr 1fr;
+
+            gap: 15px;
+
+        }
+
+        .admin-list {
+
+            display: flex;
+
+            flex-direction: column;
+
+            gap: 12px;
+
+        }
+
+        .admin-item {
+
+            background-color: #0f172a;
+
+            border: 1px solid var(--border-color);
+
+            border-radius: 6px;
+
+            padding: 12px 15px;
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+        }
+
+        .admin-info h3 {
+
+            font-size: 1rem;
+
+            margin-bottom: 3px;
+
+        }
+
+        .admin-info p {
+
+            font-size: 0.8rem;
+
+            color: var(--text-muted);
+
+            word-break: break-all;
+
+        }
+
+        .admin-actions {
+
+            display: flex;
+
+            gap: 8px;
+
+        }
+
+        .modal {
+
+            display: none;
+
+            position: fixed;
+
+            top: 0; left: 0; width: 100%; height: 100%;
+
+            background-color: rgba(0,0,0,0.7);
+
+            justify-content: center;
+
+            align-items: center;
+
+            padding: 20px;
+
+            z-index: 100;
+
+        }
+
+        .modal-content {
+
+            background-color: var(--card-bg);
+
+            border: 1px solid var(--border-color);
+
+            border-radius: 8px;
+
+            width: 100%;
+
+            max-width: 500px;
+
+            padding: 25px;
+
+            max-height: 90vh;
+
+            overflow-y: auto;
+
+        }
+
+        .modal-header {
+
+            display: flex;
+
+            justify-content: space-between;
+
+            align-items: center;
+
+            margin-bottom: 20px;
+
+        }
+
+        .close-btn {
+
+            background: none;
+
+            border: none;
+
+            color: var(--text-muted);
+
+            font-size: 1.2rem;
+
+            cursor: pointer;
+
+        }
+
+        .close-btn:hover {
+
+            color: var(--text-main);
+
+        }
+
+        .toast {
+
+            position: fixed;
+
+            bottom: 20px;
+
+            right: 20px;
+
+            background-color: #10b981;
+
+            color: white;
+
+            padding: 10px 20px;
+
+            border-radius: 6px;
+
+            font-weight: 600;
+
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+
+            display: none;
+
+            z-index: 1000;
+
+        }
+
+        .preview-img {
+
+            max-width: 80px;
+
+            max-height: 100px;
+
+            margin-top: 5px;
+
+            border-radius: 4px;
+
+            display: none;
+
+        }
+
+        .preview-logo {
+
+            width: 60px;
+
+            height: 60px;
+
+            border-radius: 50%;
+
+            object-fit: cover;
+
+            margin-top: 5px;
+
+            display: none;
+
+            border: 1px solid var(--border-color);
+
+        }
+
+        @media (max-width: 600px) {
+
+            .grid-2 {
+
+                grid-template-columns: 1fr;
+
+            }
+
+            .admin-item {
+
+                flex-direction: column;
+
+                align-items: flex-start;
+
+                gap: 10px;
+
+            }
+
+            .admin-actions {
+
+                width: 100%;
+
+                justify-content: flex-end;
+
+            }
+
+        }
+
+    </style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+    <header>
+
+        <h1>NovelLink Admin Panel</h1>
+
+        <button class="btn btn-secondary" onclick="exportData()">Backup Data</button>
+
+    </header>
+
+    <!-- PENGATURAN WEBSITE & LOGO -->
+
+    <section>
+
+        <h2>Pengaturan Website & Logo</h2>
+
+        <form id="settingsForm" onsubmit="saveSettings(event)">
+
+            <div class="form-group">
+
+                <label>Judul Website / Logo Text</label>
+
+                <input type="text" id="siteTitle" placeholder="Misal: NovelLink">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Upload Logo Bulat Website (Opsional)</label>
+
+                <input type="file" id="logoFile" accept="image/*" onchange="previewLogoImage(event)">
+
+                <input type="hidden" id="logoBase64">
+
+                <img id="logoPreview" class="preview-logo" alt="Preview Logo">
+
+            </div>
+
+            <button type="submit" class="btn">Simpan Pengaturan Website</button>
+
+        </form>
+
+    </section>
+
+    <!-- MANAJEMEN MEDIA SOSIAL & KONTAK (FLEKSIBEL) -->
+
+    <section>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+
+            <h2 style="margin-bottom: 0;">Pengaturan Media Sosial & Kontak</h2>
+
+            <button class="btn" onclick="openAddSocialModal()">+ Tambah Medsos</button>
+
+        </div>
+
+        <div class="admin-list" id="socialAdminList"></div>
+
+    </section>
+
+    <!-- PENGATURAN POP-UP NOTIFIKASI -->
+
+    <section>
+
+        <h2>Pengumuman / Pop-Up Notifikasi</h2>
+
+        <form id="popupForm" onsubmit="savePopup(event)">
+
+            <div class="form-group">
+
+                <label>Teks Pengumuman (Kosongkan jika tidak ingin ditampilkan di beranda)</label>
+
+                <textarea id="popupText" placeholder="Tulis pengumuman penting untuk pengunjung..."></textarea>
+
+            </div>
+
+            <button type="submit" class="btn">Simpan Pop-Up</button>
+
+        </form>
+
+    </section>
+
+    <!-- PENGATURAN PERINGATAN / HAK CIPTA -->
+
+    <section>
+
+        <h2>Pemberitahuan Hak Cipta & Peringatan</h2>
+
+        <form id="disclaimerForm" onsubmit="saveDisclaimer(event)">
+
+            <div class="form-group">
+
+                <label>Teks Peringatan / Hak Cipta di Menu Peringatan (Index)</label>
+
+                <textarea id="disclaimerText" placeholder="Tulis teks pemberitahuan hak cipta..."></textarea>
+
+            </div>
+
+            <button type="submit" class="btn">Simpan Peringatan</button>
+
+        </form>
+
+    </section>
+
+    <!-- MANAJEMEN NOVEL -->
+
+    <section>
+
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+
+            <h2 style="margin-bottom: 0;">Daftar Novel</h2>
+
+            <button class="btn" onclick="openAddNovelModal()">+ Tambah Novel Baru</button>
+
+        </div>
+
+        <div class="admin-list" id="novelAdminList"></div>
+
+    </section>
+
+</div>
+
+<!-- MODAL TAMBAH / EDIT MEDIA SOSIAL -->
+
+<div class="modal" id="socialModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3 id="socialModalTitle">Tambah Media Sosial</h3>
+
+            <button class="close-btn" onclick="closeSocialModal()">&times;</button>
+
+        </div>
+
+        <form id="socialFormModal" onsubmit="saveSocialItem(event)">
+
+            <input type="hidden" id="socialIndex">
+
+            
+
+            <div class="form-group">
+
+                <label>Nama Platform (Contoh: TikTok, YouTube, Instagram, WhatsApp)</label>
+
+                <input type="text" id="socialName" placeholder="Nama Medsos" required>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Link / URL Tujuan</label>
+
+                <input type="url" id="socialLinkUrl" placeholder="https://..." required>
+
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+
+                <button type="button" class="btn btn-secondary" onclick="closeSocialModal()">Batal</button>
+
+                <button type="submit" class="btn">Simpan</button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<!-- MODAL TAMBAH / EDIT NOVEL -->
+
+<div class="modal" id="novelModal">
+
+    <div class="modal-content">
+
+        <div class="modal-header">
+
+            <h3 id="novelModalTitle">Tambah Novel</h3>
+
+            <button class="close-btn" onclick="closeNovelModal()">&times;</button>
+
+        </div>
+
+        <form id="novelForm" onsubmit="saveNovel(event)">
+
+            <input type="hidden" id="novelIndex">
+
+            
+
+            <div class="form-group">
+
+                <label>Judul Novel</label>
+
+                <input type="text" id="novelTitle" required>
+
+            </div>
+
+            <div class="grid-2">
+
+                <div class="form-group">
+
+                    <label>Genre / Kategori</label>
+
+                    <input type="text" id="novelGenre" placeholder="Fantasy, Romance" required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Status</label>
+
+                    <select id="novelStatus">
+
+                        <option value="Ongoing">Ongoing</option>
+
+                        <option value="Completed">Completed</option>
+
+                    </select>
+
+                </div>
+
+            </div>
+
+            <div class="grid-2">
+
+                <div class="form-group">
+
+                    <label>Aplikasi</label>
+
+                    <input type="text" id="novelApp" placeholder="Misal: Wattpad / Karyakarsa" required>
+
+                </div>
+
+                <div class="form-group">
+
+                    <label>Link Baca (URL Tujuan)</label>
+
+                    <input type="url" id="novelLink" placeholder="https://..." required>
+
+                </div>
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Upload File Cover Gambar (Dari Perangkat)</label>
+
+                <input type="file" id="novelCoverFile" accept="image/*" onchange="previewImage(event)">
+
+                <input type="hidden" id="novelCoverBase64">
+
+                <img id="imgPreview" class="preview-img" alt="Preview Cover">
+
+            </div>
+
+            <div class="form-group">
+
+                <label>Blurb / Sinopsis</label>
+
+                <textarea id="novelSynopsis" required></textarea>
+
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+
+                <button type="button" class="btn btn-secondary" onclick="closeNovelModal()">Batal</button>
+
+                <button type="submit" class="btn">Simpan Novel</button>
+
+            </div>
+
+        </form>
+
+    </div>
+
+</div>
+
+<div class="toast" id="toastMsg">Perubahan berhasil disimpan!</div>
+
+<script>
+
+    let siteData = JSON.parse(localStorage.getItem('novellink_settings')) || {
+
+        siteTitle: "NovelLink",
+
+        logoBase64: "",
+
+        popupText: "Selamat datang di perpustakaan digital Blue Night!",
+
+        disclaimerText: "Seluruh isi konten, cerita, cover, serta file aplikasi yang terdapat di dalam situs web ini dilindungi oleh hak cipta. Dilarang keras untuk menyalin, mengunggah ulang, memperjualbelikan, atau mendistribusikan materi dari situs ini ke platform lain tanpa izin tertulis dari pemilik."
+
+    };
+
+    let socialLinks = JSON.parse(localStorage.getItem('novellink_socials')) || [
+
+        { name: "WhatsApp", url: "https://wa.me/" },
+
+        { name: "Instagram", url: "https://instagram.com/" }
+
+    ];
+
+    let novels = JSON.parse(localStorage.getItem('novellink_novels')) || [
+
+        {
+
+            title: "Blue Night Melancholy",
+
+            genre: "Fantasy / Romance",
+
+            status: "Ongoing",
+
+            app: "Wattpad",
+
+            cover: "",
+
+            synopsis: "Sebuah kisah misteri di bawah langit malam bertabur bintang biru.",
+
+            link: "#"
+
+        }
+
+    ];
+
+    // Load ke Form Website
+
+    document.getElementById('siteTitle').value = siteData.siteTitle || "";
+
+    document.getElementById('popupText').value = siteData.popupText || "";
+
+    document.getElementById('disclaimerText').value = siteData.disclaimerText || "";
+
+    
+
+    if (siteData.logoBase64) {
+
+        document.getElementById('logoBase64').value = siteData.logoBase64;
+
+        const logoPrev = document.getElementById('logoPreview');
+
+        logoPrev.src = siteData.logoBase64;
+
+        logoPrev.style.display = 'block';
+
+    }
+
+    renderSocialList();
+
+    renderNovelList();
+
+    function showToast(msg) {
+
+        const t = document.getElementById('toastMsg');
+
+        t.innerText = msg;
+
+        t.style.display = 'block';
+
+        setTimeout(() => { t.style.display = 'none'; }, 2500);
+
+    }
+
+    function saveSettings(e) {
+
+        e.preventDefault();
+
+        siteData.siteTitle = document.getElementById('siteTitle').value;
+
+        const logoVal = document.getElementById('logoBase64').value;
+
+        if (logoVal) {
+
+            siteData.logoBase64 = logoVal;
+
+        }
+
+        localStorage.setItem('novellink_settings', JSON.stringify(siteData));
+
+        showToast("Pengaturan website & logo berhasil disimpan!");
+
+    }
+
+    function previewLogoImage(event) {
+
+        const file = event.target.files[0];
+
+        if (file) {
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+
+                const base64String = e.target.result;
+
+                document.getElementById('logoBase64').value = base64String;
+
+                const preview = document.getElementById('logoPreview');
+
+                preview.src = base64String;
+
+                preview.style.display = 'block';
+
+            }
+
+            reader.readAsDataURL(file);
+
+        }
+
+    }
+
+    // --- MANAJEMEN SOCIAL MEDIA DINAMIS ---
+
+    function renderSocialList() {
+
+        const listEl = document.getElementById('socialAdminList');
+
+        listEl.innerHTML = '';
+
+        if (socialLinks.length === 0) {
+
+            listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 10px;">Belum ada media sosial ditambahkan.</p>';
+
+            return;
+
+        }
+
+        socialLinks.forEach((item, index) => {
+
+            const div = document.createElement('div');
+
+            div.className = 'admin-item';
+
+            div.innerHTML = `
+
+                <div class="admin-info">
+
+                    <h3>${item.name}</h3>
+
+                    <p>${item.url}</p>
+
+                </div>
+
+                <div class="admin-actions">
+
+                    <button class="btn btn-secondary" onclick="openEditSocialModal(${index})">Edit</button>
+
+                    <button class="btn btn-danger" onclick="deleteSocialItem(${index})">Hapus</button>
+
+                </div>
+
+            `;
+
+            listEl.appendChild(div);
+
+        });
+
+    }
+
+    function openAddSocialModal() {
+
+        document.getElementById('socialModalTitle').innerText = "Tambah Media Sosial";
+
+        document.getElementById('socialIndex').value = "";
+
+        document.getElementById('socialFormModal').reset();
+
+        document.getElementById('socialModal').style.display = 'flex';
+
+    }
+
+    function openEditSocialModal(index) {
+
+        document.getElementById('socialModalTitle').innerText = "Edit Media Sosial";
+
+        document.getElementById('socialIndex').value = index;
+
+        const item = socialLinks[index];
+
+        document.getElementById('socialName').value = item.name;
+
+        document.getElementById('socialLinkUrl').value = item.url;
+
+        document.getElementById('socialModal').style.display = 'flex';
+
+    }
+
+    function closeSocialModal() {
+
+        document.getElementById('socialModal').style.display = 'none';
+
+    }
+
+    function saveSocialItem(e) {
+
+        e.preventDefault();
+
+        const index = document.getElementById('socialIndex').value;
+
+        const socialData = {
+
+            name: document.getElementById('socialName').value,
+
+            url: document.getElementById('socialLinkUrl').value
+
+        };
+
+        if (index === "") {
+
+            socialLinks.push(socialData);
+
+        } else {
+
+            socialLinks[index] = socialData;
+
+        }
+
+        localStorage.setItem('novellink_socials', JSON.stringify(socialLinks));
+
+        renderSocialList();
+
+        closeSocialModal();
+
+        showToast("Daftar media sosial berhasil diperbarui!");
+
+    }
+
+    function deleteSocialItem(index) {
+
+        if (confirm(`Yakin ingin menghapus ${socialLinks[index].name}?`)) {
+
+            socialLinks.splice(index, 1);
+
+            localStorage.setItem('novellink_socials', JSON.stringify(socialLinks));
+
+            renderSocialList();
+
+            showToast("Media sosial berhasil dihapus.");
+
+        }
+
+    }
+
+    function savePopup(e) {
+
+        e.preventDefault();
+
+        siteData.popupText = document.getElementById('popupText').value;
+
+        localStorage.setItem('novellink_settings', JSON.stringify(siteData));
+
+        showToast("Pengumuman pop-up berhasil disimpan!");
+
+    }
+
+    function saveDisclaimer(e) {
+
+        e.preventDefault();
+
+        siteData.disclaimerText = document.getElementById('disclaimerText').value;
+
+        localStorage.setItem('novellink_settings', JSON.stringify(siteData));
+
+        showToast("Teks pemberitahuan hak cipta & peringatan berhasil disimpan!");
+
+    }
+
+    function previewImage(event) {
+
+        const file = event.target.files[0];
+
+        if (file) {
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+
+                const base64String = e.target.result;
+
+                document.getElementById('novelCoverBase64').value = base64String;
+
+                const preview = document.getElementById('imgPreview');
+
+                preview.src = base64String;
+
+                preview.style.display = 'block';
+
+            }
+
+            reader.readAsDataURL(file);
+
+        }
+
+    }
+
+    // --- MANAJEMEN NOVEL ---
+
+    function renderNovelList() {
+
+        const listEl = document.getElementById('novelAdminList');
+
+        listEl.innerHTML = '';
+
+        if (novels.length === 0) {
+
+            listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 10px;">Belum ada novel ditambahkan.</p>';
+
+            return;
+
+        }
+
+        novels.forEach((novel, index) => {
+
+            const item = document.createElement('div');
+
+            item.className = 'admin-item';
+
+            item.innerHTML = `
+
+                <div class="admin-info">
+
+                    <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent); font-weight: normal;">[${novel.status}]</span></h3>
+
+                    <p>Genre: ${novel.genre || '-'} • Aplikasi: ${novel.app || '-'}</p>
+
+                </div>
+
+                <div class="admin-actions">
+
+                    <button class="btn btn-secondary" onclick="openEditNovelModal(${index})">Edit</button>
+
+                    <button class="btn btn-danger" onclick="deleteNovel(${index})">Hapus</button>
+
+                </div>
+
+            `;
+
+            listEl.appendChild(item);
+
+        });
+
+    }
+
+    function openAddNovelModal() {
+
+        document.getElementById('novelModalTitle').innerText = "Tambah Novel Baru";
+
+        document.getElementById('novelIndex').value = "";
+
+        document.getElementById('novelForm').reset();
+
+        document.getElementById('novelCoverBase64').value = "";
+
+        document.getElementById('imgPreview').style.display = 'none';
+
+        document.getElementById('novelModal').style.display = 'flex';
+
+    }
+
+    function openEditNovelModal(index) {
+
+        document.getElementById('novelModalTitle').innerText = "Edit Novel";
+
+        document.getElementById('novelIndex').value = index;
+
+        const novel = novels[index];
+
+        
+
+        document.getElementById('novelTitle').value = novel.title;
+
+        document.getElementById('novelGenre').value = novel.genre;
+
+        document.getElementById('novelStatus').value = novel.status;
+
+        document.getElementById('novelApp').value = novel.app || "";
+
+        document.getElementById('novelSynopsis').value = novel.synopsis;
+
+        document.getElementById('novelLink').value = novel.link;
+
+        
+
+        document.getElementById('novelCoverBase64').value = novel.cover || "";
+
+        const preview = document.getElementById('imgPreview');
+
+        if (novel.cover) {
+
+            preview.src = novel.cover;
+
+            preview.style.display = 'block';
+
+        } else {
+
+            preview.style.display = 'none';
+
+        }
+
+        document.getElementById('novelModal').style.display = 'flex';
+
+    }
+
+    function closeNovelModal() {
+
+        document.getElementById('novelModal').style.display = 'none';
+
+    }
+
+    function saveNovel(e) {
+
+        e.preventDefault();
+
+        const index = document.getElementById('novelIndex').value;
+
+        const base64Cover = document.getElementById('novelCoverBase64').value;
+
+        
+
+        let finalCover = base64Cover;
+
+        if (index !== "" && !finalCover) {
+
+            finalCover = novels[index].cover;
+
+        }
+
+        const novelData = {
+
+            title: document.getElementById('novelTitle').value,
+
+            genre: document.getElementById('novelGenre').value,
+
+            status: document.getElementById('novelStatus').value,
+
+            app: document.getElementById('novelApp').value,
+
+            cover: finalCover,
+
+            synopsis: document.getElementById('novelSynopsis').value,
+
+            link: document.getElementById('novelLink').value
+
+        };
+
+        if (index === "") {
+
+            novels.push(novelData);
+
+        } else {
+
+            novels[index] = novelData;
+
+        }
+
+        localStorage.setItem('novellink_novels', JSON.stringify(novels));
+
+        renderNovelList();
+
+        closeNovelModal();
+
+        showToast("Data novel berhasil disimpan!");
+
+    }
+
+    function deleteNovel(index) {
+
+        if (confirm(`Yakin ingin menghapus novel "${novels[index].title}"?`)) {
+
+            novels.splice(index, 1);
+
+            localStorage.setItem('novellink_novels', JSON.stringify(novels));
+
+            renderNovelList();
+
+            showToast("Novel berhasil dihapus.");
+
+        }
+
+    }
+
+    function exportData() {
+
+        const exportObj = { settings: siteData, socials: socialLinks, novels: novels };
+
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(exportObj, null, 2));
+
+        const downloadAnchor = document.createElement('a');
+
+        downloadAnchor.setAttribute("href", dataStr);
+
+        downloadAnchor.setAttribute("download", "novellink_backup.json");
+
+        document.body.appendChild(downloadAnchor);
+
+        downloadAnchor.click();
+
+        downloadAnchor.remove();
+
+        showToast("Backup data berhasil diunduh!");
+
+    }
+
+</script>
+
+</body>
+
+  </html>
