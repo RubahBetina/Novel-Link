@@ -452,7 +452,7 @@
             <div class="modal-info-group" style="margin-top: 15px;">
                 <strong style="color: #00f2fe; font-size: 15px;">Blurb:</strong>
             </div>
-            <p id="modalDeskripsi" style="white-space: pre-line; margin-top: 5px;">Deskripsi buku...</p>
+            <p id="modalDeskripsi" style="white-space: pre-line; margin-top: 5px;">Blurb buku...</p>
             <div class="modal-buttons">
                 <a href="#" id="btnBaca" class="btn-baca-modal" target="_blank">BACA SEKARANG</a>
                 <button class="btn-tutup-modal" onclick="tutupModal()">Tutup</button>
@@ -469,14 +469,12 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_0gfmGBWUDodZwDuYofydmg_JQL-7zNa';
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-        
         // --- FUNGSI UTAMA LOAD DATA DARI SUPABASE ---
         async function loadPublicData() {
             await loadSettings();
             await loadSocials();
             await loadNovels();
         }
-        
         // 1. Load Settings (Judul, Logo, Popup, Disclaimer)
         async function loadSettings() {
             const { data, error } = await _supabase.from('settings').select('*').limit(1).single();
@@ -502,8 +500,7 @@
                 }
             }
         }
-        
-        // 2. Load Social Links
+        // 2. Load Social Links (Menggunakan kolom 'platform' dari Supabase)
         async function loadSocials() {
             const { data } = await _supabase.from('social_links').select('*').order('id', { ascending: true });
             const socialGrid = document.getElementById('socialGridContainer');
@@ -515,14 +512,13 @@
                     a.href = s.url;
                     a.target = "_blank";
                     a.className = "social-btn";
-                    a.innerHTML = `🔗 ${s.name}`;
+                    a.innerHTML = `🔗 ${s.platform}`;
                     socialGrid.appendChild(a);
                 });
             } else {
                 socialGrid.innerHTML = '<p style="color: #94a3b8; grid-column: 1/-1; text-align: center;">Belum ada media sosial.</p>';
             }
         }
-        
         // 3. Load Novels dari Database Supabase
         async function loadNovels() {
             const { data } = await _supabase.from('novel').select('*').order('id', { ascending: false });
@@ -549,11 +545,11 @@
                 imgEl.alt = novel.title || "Cover";
                 imgEl.className = 'novel-cover';
                 
-                // Menyimpan data menggunakan dataset (Menangani mapping kolom database dengan benar)
+                // Mengambil nilai dari kolom 'description' di Supabase
                 imgEl.dataset.title = novel.title || "";
                 imgEl.dataset.genre = novel.genre || "-";
-                imgEl.dataset.app = novel.app || novel.platform || "-";
-                imgEl.dataset.synopsis = novel.description || novel.blurb || novel.synopsis || "Deskripsi belum tersedia.";
+                imgEl.dataset.app = novel.aplikasi || "-"; 
+                imgEl.dataset.description = novel.description || "Blurb belum tersedia.";
                 imgEl.dataset.link = linkTarget;
                 
                 // Event listener ketika cover diklik
@@ -562,18 +558,15 @@
                         this.dataset.title,
                         this.dataset.genre,
                         this.dataset.app,
-                        this.dataset.synopsis,
+                        this.dataset.description,
                         this.dataset.link
                     );
                 });
-                
                 let pEl = document.createElement('p');
                 pEl.className = 'novel-judul';
                 pEl.innerText = novel.title;
-                
                 itemDiv.appendChild(imgEl);
                 itemDiv.appendChild(pEl);
-                
                 if (novel.status && novel.status.toLowerCase() === 'completed') {
                     containerTamat.appendChild(itemDiv);
                 } else {
@@ -587,7 +580,6 @@
                 containerTamat.innerHTML = '<p style="color: #94a3b8; padding: 10px; width: 100%; text-align: center;">Belum ada novel tamat.</p>';
             }
         }
-        
         function gantiTab(namaHalaman, tombol) {
             let pages = document.querySelectorAll('.page-content');
             pages.forEach(page => page.classList.remove('active'));
@@ -596,7 +588,6 @@
             document.getElementById('page-' + namaHalaman).classList.add('active');
             tombol.classList.add('active');
         }
-        
         function handleGlobalClick(event) {
             let banner = document.getElementById('welcomeBanner');
             let indicator = document.getElementById('bannerIndicator');
@@ -609,7 +600,6 @@
                 }
             }
         }
-        
         function showBanner(event) {
             event.stopPropagation();
             let banner = document.getElementById('welcomeBanner');
@@ -617,7 +607,6 @@
             banner.classList.remove('collapsed');
             indicator.classList.remove('visible');
         }
-        
         function bukaModal(judul, genre, app, deskripsi, linkBaca) {
             document.getElementById('modalJudul').innerText = judul;
             document.getElementById('modalGenre').innerText = genre;
@@ -631,7 +620,6 @@
                 modal.classList.add('active');
             }, 10);
         }
-        
         function tutupModal() {
             let modal = document.getElementById('modalPopup');
             modal.classList.remove('active');
@@ -639,7 +627,6 @@
                 modal.style.display = 'none';
             }, 300);
         }
-        
         // Jalankan saat halaman selesai dimuat
         window.onload = loadPublicData;
     </script>
