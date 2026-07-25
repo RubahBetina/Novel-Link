@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>NovelLink - Koleksi Cerita Terbaik</title>
+    <!-- Dynamic Favicon Container -->
+    <link id="dynamicFavicon" rel="shortcut icon" href="" type="image/x-icon">
     <!-- Import font Dancing Script & Cinzel dari Google Fonts -->
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Dancing+Script:wght@700&display=swap" rel="stylesheet">
     <!-- Supabase JS SDK v2 -->
@@ -646,17 +648,14 @@
             <div class="reading-girl-wrapper">
                 <div class="loader-glow-ring"></div>
                 <svg viewBox="0 0 100 100" width="60" height="60" fill="none" xmlns="http://www.w3.org/2000/svg">
-                    <!-- Buku Terbuka Bercahaya -->
                     <path d="M50 25 C35 25 20 30 10 38 L10 75 C20 68 35 63 50 63 C65 63 80 68 90 75 L90 38 C80 30 65 25 50 25 Z" fill="#1a2b4c" stroke="#00f2fe" stroke-width="2"/>
                     <path d="M50 28 C37 28 23 32 13 39 L13 72 C23 65 37 61 50 61 Z" fill="#ffffff" opacity="0.9"/>
                     <path d="M50 28 C63 28 77 32 87 39 L87 72 C77 65 63 61 50 61 Z" fill="#ffffff" opacity="0.9"/>
                     <line x1="50" y1="28" x2="50" y2="61" stroke="#0b132b" stroke-width="2"/>
-                    <!-- Garis Teks di Halaman -->
                     <line x1="20" y1="42" x2="38" y2="39" stroke="#4facfe" stroke-width="2" stroke-linecap="round"/>
                     <line x1="20" y1="49" x2="35" y2="46" stroke="#4facfe" stroke-width="2" stroke-linecap="round"/>
                     <line x1="62" y1="39" x2="80" y2="42" stroke="#4facfe" stroke-width="2" stroke-linecap="round"/>
                     <line x1="65" y1="46" x2="80" y2="49" stroke="#4facfe" stroke-width="2" stroke-linecap="round"/>
-                    <!-- Efek Cahaya / Partikel Sihir di atas buku -->
                     <circle cx="50" cy="16" r="3.5" fill="#00f2fe" opacity="0.9"/>
                     <circle cx="33" cy="14" r="2" fill="#4facfe" opacity="0.7"/>
                     <circle cx="67" cy="14" r="2" fill="#4facfe" opacity="0.7"/>
@@ -796,9 +795,16 @@
                     document.title = data.site_title + " - Koleksi Cerita Terbaik";
                 }
                 if (data.logo_url) {
+                    // 1. Pasang Logo di Header Main
                     const logoEl = document.getElementById('headerLogo');
                     logoEl.src = data.logo_url;
                     logoEl.style.display = 'block';
+
+                    // 2. Pasang Favicon secara Dinamis di Tab Browser
+                    const faviconEl = document.getElementById('dynamicFavicon');
+                    if (faviconEl) {
+                        faviconEl.href = data.logo_url;
+                    }
                 }
                 const bannerEl = document.getElementById('welcomeBanner');
                 if (data.popup_text && data.popup_text.trim() !== "") {
