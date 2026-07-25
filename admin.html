@@ -224,7 +224,6 @@
     </style>
 </head>
 <body>
-
     <!-- 1. SECTION LOGIN -->
     <div class="container" id="loginSection">
         <section style="max-width: 400px; margin: 80px auto;">
@@ -400,10 +399,9 @@
         const SUPABASE_ANON_KEY = 'sb_publishable_0gfmGBWUDodZwDuYofydmg_JQL-7zNa';
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
         let currentLogoFile = null;
         let currentCoverFile = null;
-        let existingLogoUrl = ""; // Menyimpan URL logo lama agar tidak hilang jika tidak diganti
+        let existingLogoUrl = "";
 
         // --- CEK SESI OTENTIKASI ---
         async function checkAuth() {
@@ -418,7 +416,6 @@
             }
         }
         checkAuth();
-
         _supabase.auth.onAuthStateChange((event, session) => {
             checkAuth();
         });
@@ -461,7 +458,7 @@
                 document.getElementById('popupText').value = data.popup_text || "";
                 document.getElementById('disclaimerText').value = data.disclaimer_text || "";
                 if (data.logo_url) {
-                    existingLogoUrl = data.logo_url; // Simpan URL logo aktif
+                    existingLogoUrl = data.logo_url;
                     const prev = document.getElementById('logoPreview');
                     prev.src = data.logo_url;
                     prev.style.display = 'block';
@@ -481,8 +478,7 @@
 
         async function saveSettings(e) {
             e.preventDefault();
-            let logoUrl = existingLogoUrl; // Default ke logo lama
-
+            let logoUrl = existingLogoUrl;
             if (currentLogoFile) {
                 const fileName = `logo_${Date.now()}.${currentLogoFile.name.split('.').pop()}`;
                 const { error: uploadError } = await _supabase.storage.from('covers').upload(fileName, currentLogoFile);
@@ -493,7 +489,6 @@
                 const { data } = _supabase.storage.from('covers').getPublicUrl(fileName);
                 logoUrl = data.publicUrl;
             }
-
             const payload = {
                 id: 1,
                 site_title: document.getElementById('siteTitle').value,
@@ -501,13 +496,12 @@
                 popup_text: document.getElementById('popupText').value,
                 disclaimer_text: document.getElementById('disclaimerText').value
             };
-
             const { error } = await _supabase.from('settings').upsert(payload);
             if (error) {
                 alert('Gagal menyimpan: ' + error.message);
             } else {
-                existingLogoUrl = logoUrl; // Perbarui state logo lama
-                currentLogoFile = null; // Reset file object
+                existingLogoUrl = logoUrl;
+                currentLogoFile = null;
                 showToast("Pengaturan website berhasil disimpan!");
             }
         }
@@ -615,6 +609,7 @@
                 item.innerHTML = `
                     <div class="admin-info">
                         <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent);">[${novel.status}]</span></h3>
+                        <p>Genre: ${novel.genre || '-'} | Aplikasi: ${novel.aplikasi || '-'}</p>
                         <p>Link: ${novel.link || '-'}</p>
                     </div>
                     <div class="admin-actions">
@@ -639,6 +634,8 @@
             document.getElementById('novelModalTitle').innerText = "Edit Novel";
             document.getElementById('novelId').value = novel.id;
             document.getElementById('novelTitle').value = novel.title;
+            document.getElementById('novelGenre').value = novel.genre || "";
+            document.getElementById('novelApp').value = novel.aplikasi || "";
             document.getElementById('novelStatus').value = novel.status;
             document.getElementById('novelSynopsis').value = novel.description || novel.blurb || "";
             document.getElementById('novelLink').value = novel.link || "";
@@ -681,15 +678,15 @@
                 const { data } = _supabase.storage.from('covers').getPublicUrl(fileName);
                 coverUrl = data.publicUrl;
             }
-
             const novelData = {
                 title: document.getElementById('novelTitle').value,
+                genre: document.getElementById('novelGenre').value,
+                aplikasi: document.getElementById('novelApp').value,
                 status: document.getElementById('novelStatus').value,
                 cover_url: coverUrl,
                 description: document.getElementById('novelSynopsis').value,
                 link: document.getElementById('novelLink').value
             };
-
             if (id === "") {
                 await _supabase.from('novel').insert([novelData]);
             } else {
