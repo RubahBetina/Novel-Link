@@ -6,8 +6,6 @@
     <title>Admin Panel - NovelLink</title>
     <!-- Supabase JS SDK v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- SortableJS untuk Drag and Drop -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/SortableJS/1.15.0/Sortable.min.js"></script>
     <!-- Cropper.js CSS & JS (Untuk Pop-up Crop Grid) -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
@@ -136,15 +134,43 @@
             display: flex;
             flex-direction: column;
             gap: 12px;
+            position: relative;
         }
+        
+        /* Blok Item Novel */
         .admin-item {
             background-color: #0f172a;
             border: 1px solid var(--border-color);
             border-radius: 6px;
             padding: 12px 15px;
             display: flex;
-            justify-content: space-between;
             align-items: center;
+            gap: 12px;
+            user-select: none;
+            transition: box-shadow 0.2s;
+        }
+        
+        /* Style saat Blok Sedang Digeser (Melayang) */
+        .admin-item.is-dragging {
+            position: fixed !important;
+            z-index: 9999;
+            opacity: 0.95;
+            background-color: #1e293b !important;
+            border: 2px solid var(--accent) !important;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
+            pointer-events: none;
+        }
+        
+        .drag-placeholder {
+            background-color: rgba(56, 189, 248, 0.1);
+            border: 2px dashed var(--accent);
+            border-radius: 6px;
+            transition: all 0.15s ease;
+        }
+
+        .admin-info {
+            flex-grow: 1;
+            min-width: 0;
         }
         .admin-info h3 {
             font-size: 1rem;
@@ -159,7 +185,9 @@
             display: flex;
             gap: 8px;
             align-items: center;
+            flex-shrink: 0;
         }
+
         .modal {
             display: none;
             position: fixed;
@@ -207,7 +235,7 @@
             font-weight: 600;
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
             display: none;
-            z-index: 1000;
+            z-index: 10000;
         }
         .preview-img {
             max-width: 80px;
@@ -264,26 +292,14 @@
             color: #0f172a;
         }
 
-        /* Style untuk Efek Drag & Drop Terangkat */
-        .sortable-ghost {
-            opacity: 0.2;
-            background: #334155 !important;
-            border: 2px dashed var(--accent);
-        }
-        .sortable-drag {
-            opacity: 0.95 !important;
-            background: #1e293b !important;
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7) !important;
-            border: 1px solid var(--accent);
-            transform: scale(1.03);
-        }
         .drag-handle {
             cursor: grab;
             color: var(--text-muted);
-            font-size: 1.3rem;
+            font-size: 1.5rem;
             padding: 8px 12px;
             user-select: none;
-            touch-action: none;
+            touch-action: none; /* Kunci agar HP tidak scroll halaman saat tombol digeser */
+            flex-shrink: 0;
             display: flex;
             align-items: center;
         }
@@ -498,10 +514,9 @@
         let currentCoverFile = null;
         let existingLogoUrl = "";
 
-        // --- VARIABEL CROPPER.JS & SORTABLE ---
+        // --- VARIABEL CROPPER.JS ---
         let cropperInstance = null;
         let croppedBlobData = null;
-        let novelSortableInstance = null;
 
         // --- CEK SESI OTENTIKASI ---
         async function checkAuth() {
@@ -777,41 +792,101 @@
                 item.className = 'admin-item';
                 item.setAttribute('data-id', novel.id);
                 
+                const safeNovelJson = JSON.stringify(novel).replace(/'/g, "&#39;");
+
                 item.innerHTML = `
-                    <div style="display: flex; align-items: center; gap: 10px; width: 100%;">
-                        <div class="drag-handle" title="Geser untuk mengubah urutan">☰</div>
-                        <div class="admin-info" style="flex-grow: 1;">
-                            <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent);">[${novel.status}]</span></h3>
-                            <p>Genre: ${novel.genre || '-'} | Aplikasi: ${novel.aplikasi || '-'}</p>
-                            <p>Link: ${novel.link || '-'}</p>
-                        </div>
+                    <div class="drag-handle" title="Tahan dan geser untuk mengubah urutan">☰</div>
+                    <div class="admin-info">
+                        <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent);">[${novel.status}]</span></h3>
+                        <p>Genre: ${novel.genre || '-'} | Aplikasi: ${novel.aplikasi || '-'}</p>
+                        <p>Link: ${novel.link || '-'}</p>
                     </div>
                     <div class="admin-actions">
-                        <button class="btn btn-secondary" onclick='openEditNovelModal(${JSON.stringify(novel)})'>Edit</button>
+                        <button class="btn btn-secondary" onclick='openEditNovelModal(${safeNovelJson})'>Edit</button>
                         <button class="btn btn-danger" onclick="deleteNovel(${novel.id})">Hapus</button>
                     </div>
                 `;
                 listEl.appendChild(item);
             });
 
-            // Aktifkan / Perbarui SortableJS dengan fallbackOnBody untuk mencegah macet
-            if (typeof Sortable !== 'undefined') {
-                if (novelSortableInstance) {
-                    novelSortableInstance.destroy();
-                }
-                
-                novelSortableInstance = Sortable.create(listEl, {
-                    handle: '.drag-handle',
-                    animation: 150,
-                    forceFallback: true,
-                    fallbackOnBody: true, // Mencegah elemen tersangkut/tidak bisa digeser akibat overflow kontainer
-                    ghostClass: 'sortable-ghost',
-                    dragClass: 'sortable-drag',
-                    onEnd: function() {
-                        showToast("Urutan tampilan novel berhasil diubah!");
+            // Aktifkan Native Pointer Events Drag and Drop yang Responsif di HP
+            initNativeDragAndDrop();
+        }
+
+        // --- SISTEM DRAG & DROP NATIVE (POINTER EVENTS) ---
+        function initNativeDragAndDrop() {
+            const listEl = document.getElementById('novelAdminList');
+            if (!listEl) return;
+
+            listEl.querySelectorAll('.drag-handle').forEach(handle => {
+                handle.onpointerdown = function(e) {
+                    e.preventDefault();
+                    const draggingEl = handle.closest('.admin-item');
+                    if (!draggingEl) return;
+
+                    handle.setPointerCapture(e.pointerId);
+
+                    const startY = e.clientY;
+                    const itemRect = draggingEl.getBoundingClientRect();
+                    
+                    // Buat elemen bayangan (placeholder) agar layout tidak bergeser aneh
+                    const placeholder = document.createElement('div');
+                    placeholder.style.height = `${itemRect.height}px`;
+                    placeholder.className = 'drag-placeholder';
+                    draggingEl.parentNode.insertBefore(placeholder, draggingEl);
+
+                    // Ubah elemen menjadi melayang (fixed mengikuti jari)
+                    draggingEl.classList.add('is-dragging');
+                    draggingEl.style.width = `${itemRect.width}px`;
+                    draggingEl.style.left = `${itemRect.left}px`;
+                    draggingEl.style.top = `${itemRect.top}px`;
+
+                    function onPointerMove(moveEvent) {
+                        const deltaY = moveEvent.clientY - startY;
+                        draggingEl.style.top = `${itemRect.top + deltaY}px`;
+
+                        // Deteksi posisi kursor/jari terhadap item lain untuk menukar posisi placeholder
+                        const currentY = moveEvent.clientY;
+                        const siblings = Array.from(listEl.querySelectorAll('.admin-item:not(.is-dragging)'));
+                        
+                        let inserted = false;
+                        for (let sib of siblings) {
+                            const sibRect = sib.getBoundingClientRect();
+                            const sibMid = sibRect.top + sibRect.height / 2;
+                            if (currentY < sibMid) {
+                                listEl.insertBefore(placeholder, sib);
+                                inserted = true;
+                                break;
+                            }
+                        }
+                        if (!inserted) {
+                            listEl.appendChild(placeholder);
+                        }
                     }
-                });
-            }
+
+                    function onPointerUp(upEvent) {
+                        handle.releasePointerCapture(upEvent.pointerId);
+
+                        // Kembalikan elemen ke posisi placeholder di DOM
+                        placeholder.parentNode.insertBefore(draggingEl, placeholder);
+                        placeholder.remove();
+
+                        // Bersihkan kelas dan style melayang
+                        draggingEl.classList.remove('is-dragging');
+                        draggingEl.style.width = '';
+                        draggingEl.style.left = '';
+                        draggingEl.style.top = '';
+
+                        showToast("Urutan tampilan novel berhasil diubah!");
+
+                        window.removeEventListener('pointermove', onPointerMove);
+                        window.removeEventListener('pointerup', onPointerUp);
+                    }
+
+                    window.addEventListener('pointermove', onPointerMove);
+                    window.addEventListener('pointerup', onPointerUp);
+                };
+            });
         }
 
         function openAddNovelModal() {
