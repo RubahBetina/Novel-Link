@@ -196,7 +196,7 @@
             border: 1px solid var(--border-color);
             border-radius: 8px;
             width: 100%;
-            max-width: 500px;
+            max-width: 550px;
             padding: 25px;
             max-height: 90vh;
             overflow-y: auto;
@@ -295,6 +295,55 @@
         }
         .drag-handle:active {
             cursor: grabbing;
+        }
+
+        /* STYLING MULTI PLATFORM DINAMIS */
+        .platform-container {
+            border: 1px dashed var(--border-color);
+            border-radius: 6px;
+            padding: 12px;
+            background-color: rgba(15, 23, 42, 0.5);
+            margin-bottom: 15px;
+        }
+        .platform-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .platform-row:last-child {
+            margin-bottom: 0;
+        }
+        .platform-row select {
+            width: 40%;
+        }
+        .platform-row input {
+            width: 50%;
+        }
+        .platform-row .btn-remove {
+            width: 10%;
+            padding: 8px;
+            background: var(--danger);
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .platform-badge {
+            display: inline-block;
+            background-color: #334155;
+            color: var(--accent);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            margin-right: 5px;
+            margin-top: 4px;
+            text-decoration: none;
+        }
+        .platform-badge:hover {
+            background-color: var(--accent);
+            color: #0f172a;
         }
     </style>
 </head>
@@ -430,7 +479,7 @@
                 <div class="grid-2">
                     <div class="form-group">
                         <label>Genre / Kategori</label>
-                        <input type="text" id="novelGenre" required>
+                        <input type="text" id="novelGenre" required placeholder="Misal: Romance, Fantasy">
                     </div>
                     <div class="form-group">
                         <label>Status</label>
@@ -440,16 +489,18 @@
                         </select>
                     </div>
                 </div>
-                <div class="grid-2">
-                    <div class="form-group">
-                        <label>Aplikasi</label>
-                        <input type="text" id="novelApp" required>
+
+                <!-- SECTION DINAMIS MULTI PLATFORM (JSONB) -->
+                <div class="form-group">
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+                        <label style="margin-bottom: 0;">Platform & Link Baca</label>
+                        <button type="button" class="btn btn-secondary" style="padding: 4px 10px; font-size: 0.8rem;" onclick="addPlatformRow()">+ Tambah Platform</button>
                     </div>
-                    <div class="form-group">
-                        <label>Link Baca (URL Tujuan)</label>
-                        <input type="url" id="novelLink" required>
+                    <div class="platform-container" id="platformListContainer">
+                        <!-- Baris Platform Dinamis dimasukkan via JS di sini -->
                     </div>
                 </div>
+
                 <div class="form-group">
                     <label>Upload File Cover Gambar (Rasio 3:4)</label>
                     <input type="file" id="novelCoverFile" accept="image/*" onchange="openCropModal(event)">
@@ -500,11 +551,16 @@
         const { createClient } = supabase;
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-        let currentLogoFile = null;
-        let currentCoverFile = null;
-        let existingLogoUrl = "";
+        // --- DAFTAR PRESET 19 PLATFORM WAJIB ---
+        const PRESET_PLATFORMS = [
+            "Goodnovel", "Fizzo", "Dreame/Innovel", "Bakisah", "Joyread",
+            "Hinovel", "Karyakarsa", "Webnovel", "Noveltoon", "Maxnovel",
+            "Inkitt", "Wattpad", "Novelme", "NovelPlus", "Victie",
+            "KBM", "Google PlayBook", "Novelah", "Freenovel"
+        ];
 
-        // --- VARIABEL CROPPER.JS ---
+        let currentLogoFile = null;
+        let existingLogoUrl = "";
         let cropperInstance = null;
         let croppedBlobData = null;
 
@@ -767,6 +823,43 @@
             closeCropModal();
         }
 
+        // --- MANAJEMEN PLATFORM DINAMIS (UI MODAL) ---
+        function addPlatformRow(name = "", url = "") {
+            const container = document.getElementById('platformListContainer');
+            const row = document.createElement('div');
+            row.className = 'platform-row';
+
+            let optionsHtml = PRESET_PLATFORMS.map(p => 
+                `<option value="${p}" ${p === name ? 'selected' : ''}>${p}</option>`
+            ).join('');
+
+            row.innerHTML = `
+                <select required class="platform-name-select">
+                    <option value="" disabled ${!name ? 'selected' : ''}>Pilih Platform...</option>
+                    ${optionsHtml}
+                </select>
+                <input type="url" class="platform-url-input" placeholder="https://..." value="${url}" required>
+                <button type="button" class="btn-remove" onclick="this.parentElement.remove()" title="Hapus Baris">&times;</button>
+            `;
+            container.appendChild(row);
+        }
+
+        function getPlatformsData() {
+            const container = document.getElementById('platformListContainer');
+            const rows = container.querySelectorAll('.platform-row');
+            const platforms = [];
+
+            rows.forEach(row => {
+                const name = row.querySelector('.platform-name-select').value;
+                const url = row.querySelector('.platform-url-input').value.trim();
+                if (name && url) {
+                    platforms.push({ name, url });
+                }
+            });
+
+            return platforms;
+        }
+
         async function loadNovels() {
             const { data } = await _supabase.from('novel').select('*').order('sort_order', { ascending: true });
             const listEl = document.getElementById('novelAdminList');
@@ -782,14 +875,24 @@
                 item.className = 'admin-item';
                 item.setAttribute('data-id', novel.id);
                 
+                // Format badge platform untuk tampilan di daftar admin
+                let platformsBadges = '';
+                if (Array.isArray(novel.platforms) && novel.platforms.length > 0) {
+                    platformsBadges = novel.platforms.map(p => 
+                        `<a href="${p.url}" target="_blank" class="platform-badge">🔗 ${p.name}</a>`
+                    ).join('');
+                } else {
+                    platformsBadges = '<span style="font-size: 0.8rem; color: var(--text-muted);">- Tidak Ada Link Platform -</span>';
+                }
+
                 const safeNovelJson = JSON.stringify(novel).replace(/'/g, "&#39;");
 
                 item.innerHTML = `
                     <div class="drag-handle" title="Tahan dan geser untuk mengubah urutan">☰</div>
                     <div class="admin-info">
                         <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent);">[${novel.status}]</span></h3>
-                        <p>Genre: ${novel.genre || '-'} | Aplikasi: ${novel.aplikasi || '-'}</p>
-                        <p>Link: ${novel.link || '-'}</p>
+                        <p>Genre: ${novel.genre || '-'}</p>
+                        <div style="margin-top: 4px;">${platformsBadges}</div>
                     </div>
                     <div class="admin-actions">
                         <button class="btn btn-secondary" onclick='openEditNovelModal(${safeNovelJson})'>Edit</button>
@@ -860,7 +963,6 @@
                         draggingEl.style.left = '';
                         draggingEl.style.top = '';
 
-                        // Simpan urutan baru ke database Supabase
                         (async () => {
                             try {
                                 const items = listEl.querySelectorAll('.admin-item');
@@ -892,6 +994,11 @@
             document.getElementById('novelId').value = "";
             document.getElementById('novelForm').reset();
             document.getElementById('imgPreview').style.display = 'none';
+            document.getElementById('platformListContainer').innerHTML = '';
+            
+            // Secara bawaan buat 1 baris platform kosong
+            addPlatformRow();
+
             croppedBlobData = null;
             document.getElementById('novelModal').style.display = 'flex';
         }
@@ -901,11 +1008,19 @@
             document.getElementById('novelId').value = novel.id;
             document.getElementById('novelTitle').value = novel.title;
             document.getElementById('novelGenre').value = novel.genre || "";
-            document.getElementById('novelApp').value = novel.aplikasi || "";
             document.getElementById('novelStatus').value = novel.status;
-            document.getElementById('novelSynopsis').value = novel.description || novel.blurb || "";
-            document.getElementById('novelLink').value = novel.link || "";
+            document.getElementById('novelSynopsis').value = novel.description || "";
             
+            // Render platform-platform yang tersimpan dari JSONB
+            const container = document.getElementById('platformListContainer');
+            container.innerHTML = '';
+            
+            if (Array.isArray(novel.platforms) && novel.platforms.length > 0) {
+                novel.platforms.forEach(p => addPlatformRow(p.name, p.url));
+            } else {
+                addPlatformRow();
+            }
+
             croppedBlobData = null; 
             const preview = document.getElementById('imgPreview');
             if (novel.cover_url) {
@@ -925,6 +1040,12 @@
             e.preventDefault();
             const id = document.getElementById('novelId').value;
             let coverUrl = document.getElementById('imgPreview').src;
+
+            const platforms = getPlatformsData();
+            if (platforms.length === 0) {
+                alert("Harap tambahkan setidaknya 1 platform & link baca!");
+                return;
+            }
             
             if (croppedBlobData) {
                 const fileName = `novel_${Date.now()}.jpg`;
@@ -943,11 +1064,10 @@
             const novelData = {
                 title: document.getElementById('novelTitle').value,
                 genre: document.getElementById('novelGenre').value,
-                aplikasi: document.getElementById('novelApp').value,
                 status: document.getElementById('novelStatus').value,
                 cover_url: coverUrl,
                 description: document.getElementById('novelSynopsis').value,
-                link: document.getElementById('novelLink').value
+                platforms: platforms // Tersimpan otomatis sebagai JSONB
             };
 
             if (id === "") {
