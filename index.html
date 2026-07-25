@@ -599,26 +599,30 @@
             background-color: #dc2626;
         }
 
+        /* --- TOMBOL BACK TO TOP MINIMALIS --- */
         .back-to-top {
             position: fixed;
             bottom: 25px;
             right: 25px;
-            background: rgba(11, 19, 43, 0.9);
+            background: rgba(11, 19, 43, 0.85);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
             color: #00f2fe;
-            border: 1px solid #00f2fe;
-            width: 45px;
-            height: 45px;
+            border: 1px solid rgba(0, 242, 254, 0.5);
+            width: 42px;
+            height: 42px;
             border-radius: 50%;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 18px;
             cursor: pointer;
-            box-shadow: 0 4px 15px rgba(0, 242, 254, 0.5);
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
             opacity: 0;
             visibility: hidden;
-            transition: all 0.3s ease;
+            transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             z-index: 999;
+            padding: 0;
+            outline: none;
         }
         .back-to-top.show {
             opacity: 1;
@@ -627,7 +631,18 @@
         .back-to-top:hover {
             background: #00f2fe;
             color: #0b132b;
-            transform: translateY(-3px);
+            border-color: #00f2fe;
+            box-shadow: 0 0 20px rgba(0, 242, 254, 0.6);
+            transform: translateY(-4px);
+        }
+        .back-to-top svg {
+            width: 20px;
+            height: 20px;
+            stroke: currentColor;
+            transition: transform 0.2s ease;
+        }
+        .back-to-top:hover svg {
+            transform: translateY(-2px);
         }
 
         footer {
@@ -757,8 +772,12 @@
         </div>
     </div>
 
-    <!-- TOMBOL BACK TO TOP -->
-    <button id="backToTopBtn" class="back-to-top" onclick="scrollToTop()" title="Kembali ke atas">⬆️</button>
+    <!-- TOMBOL BACK TO TOP MINIMALIS -->
+    <button id="backToTopBtn" class="back-to-top" onclick="scrollToTop()" title="Kembali ke atas">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <polyline points="18 15 12 9 6 15"></polyline>
+        </svg>
+    </button>
 
     <footer>
         © 2026 NovelLink • Dibangun dengan cinta untuk para pembaca setia.
