@@ -6,7 +6,7 @@
     <title>Admin Panel - NovelLink</title>
     <!-- Supabase JS SDK v2 -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    <!-- Cropper.js CSS & JS (Untuk Pop-up Crop Grid) -->
+    <!-- Cropper.js CSS & JS -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
     <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
     <style>
@@ -136,8 +136,6 @@
             gap: 12px;
             position: relative;
         }
-        
-        /* Blok Item Novel */
         .admin-item {
             background-color: #0f172a;
             border: 1px solid var(--border-color);
@@ -149,8 +147,6 @@
             user-select: none;
             transition: box-shadow 0.2s;
         }
-        
-        /* Style saat Blok Sedang Digeser (Melayang) */
         .admin-item.is-dragging {
             position: fixed !important;
             z-index: 9999;
@@ -160,14 +156,12 @@
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.8);
             pointer-events: none;
         }
-        
         .drag-placeholder {
             background-color: rgba(56, 189, 248, 0.1);
             border: 2px dashed var(--accent);
             border-radius: 6px;
             transition: all 0.15s ease;
         }
-
         .admin-info {
             flex-grow: 1;
             min-width: 0;
@@ -187,7 +181,6 @@
             align-items: center;
             flex-shrink: 0;
         }
-
         .modal {
             display: none;
             position: fixed;
@@ -256,8 +249,6 @@
         }
         .hidden { display: none !important; }
         .error-text { color: var(--danger); font-size: 0.85rem; margin-top: 5px; }
-        
-        /* Style untuk Pop-up Cropper Grid */
         .crop-container {
             width: 100%;
             max-height: 350px;
@@ -291,14 +282,13 @@
             background-color: var(--accent);
             color: #0f172a;
         }
-
         .drag-handle {
             cursor: grab;
             color: var(--text-muted);
             font-size: 1.5rem;
             padding: 8px 12px;
             user-select: none;
-            touch-action: none; /* Kunci agar HP tidak scroll halaman saat tombol digeser */
+            touch-action: none;
             flex-shrink: 0;
             display: flex;
             align-items: center;
@@ -568,7 +558,7 @@
 
         // 1. Settings & Logo
         async function loadSettings() {
-            const { data, error } = await _supabase.from('settings').select('*').limit(1).single();
+            const { data } = await _supabase.from('settings').select('*').limit(1).single();
             if (data) {
                 document.getElementById('siteTitle').value = data.site_title || "";
                 document.getElementById('popupText').value = data.popup_text || "";
@@ -724,7 +714,7 @@
                     cropperInstance.destroy();
                 }
                 cropperInstance = new Cropper(imageEl, {
-                    aspectRatio: 1086 / 1448, // Rasio Standar Cover Novel 3:4
+                    aspectRatio: 1086 / 1448,
                     viewMode: 1,
                     dragMode: 'move',
                     autoCropArea: 0.9,
@@ -778,7 +768,7 @@
         }
 
         async function loadNovels() {
-            const { data } = await _supabase.from('novel').select('*').order('id', { ascending: false });
+            const { data } = await _supabase.from('novel').select('*').order('sort_order', { ascending: true });
             const listEl = document.getElementById('novelAdminList');
             listEl.innerHTML = '';
             
@@ -809,11 +799,10 @@
                 listEl.appendChild(item);
             });
 
-            // Aktifkan Native Pointer Events Drag and Drop yang Responsif di HP
             initNativeDragAndDrop();
         }
 
-        // --- SISTEM DRAG & DROP NATIVE (POINTER EVENTS) ---
+        // --- SISTEM DRAG & DROP NATIVE (POINTER EVENTS) DENGAN AUTO-SAVE KE SUPABASE ---
         function initNativeDragAndDrop() {
             const listEl = document.getElementById('novelAdminList');
             if (!listEl) return;
@@ -825,17 +814,14 @@
                     if (!draggingEl) return;
 
                     handle.setPointerCapture(e.pointerId);
-
                     const startY = e.clientY;
                     const itemRect = draggingEl.getBoundingClientRect();
-                    
-                    // Buat elemen bayangan (placeholder) agar layout tidak bergeser aneh
+
                     const placeholder = document.createElement('div');
                     placeholder.style.height = `${itemRect.height}px`;
                     placeholder.className = 'drag-placeholder';
                     draggingEl.parentNode.insertBefore(placeholder, draggingEl);
 
-                    // Ubah elemen menjadi melayang (fixed mengikuti jari)
                     draggingEl.classList.add('is-dragging');
                     draggingEl.style.width = `${itemRect.width}px`;
                     draggingEl.style.left = `${itemRect.left}px`;
@@ -845,7 +831,6 @@
                         const deltaY = moveEvent.clientY - startY;
                         draggingEl.style.top = `${itemRect.top + deltaY}px`;
 
-                        // Deteksi posisi kursor/jari terhadap item lain untuk menukar posisi placeholder
                         const currentY = moveEvent.clientY;
                         const siblings = Array.from(listEl.querySelectorAll('.admin-item:not(.is-dragging)'));
                         
@@ -866,18 +851,31 @@
 
                     function onPointerUp(upEvent) {
                         handle.releasePointerCapture(upEvent.pointerId);
-
-                        // Kembalikan elemen ke posisi placeholder di DOM
+                        
                         placeholder.parentNode.insertBefore(draggingEl, placeholder);
                         placeholder.remove();
-
-                        // Bersihkan kelas dan style melayang
+                        
                         draggingEl.classList.remove('is-dragging');
                         draggingEl.style.width = '';
                         draggingEl.style.left = '';
                         draggingEl.style.top = '';
 
-                        showToast("Urutan tampilan novel berhasil diubah!");
+                        // Simpan urutan baru ke database Supabase
+                        (async () => {
+                            try {
+                                const items = listEl.querySelectorAll('.admin-item');
+                                const updates = Array.from(items).map((item, index) => {
+                                    const id = item.getAttribute('data-id');
+                                    return _supabase.from('novel').update({ sort_order: index }).eq('id', id);
+                                });
+                                
+                                await Promise.all(updates);
+                                showToast("Urutan novel berhasil diperbarui di database!");
+                            } catch (err) {
+                                console.error("Gagal menyimpan urutan:", err);
+                                showToast("Gagal menyimpan urutan ke database.");
+                            }
+                        })();
 
                         window.removeEventListener('pointermove', onPointerMove);
                         window.removeEventListener('pointerup', onPointerUp);
@@ -953,10 +951,13 @@
             };
 
             if (id === "") {
+                const { count } = await _supabase.from('novel').select('*', { count: 'exact', head: true });
+                novelData.sort_order = count || 0;
                 await _supabase.from('novel').insert([novelData]);
             } else {
                 await _supabase.from('novel').update(novelData).eq('id', id);
             }
+            
             closeNovelModal();
             loadNovels();
             showToast("Data novel berhasil disimpan ke database!");
