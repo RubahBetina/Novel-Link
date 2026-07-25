@@ -541,17 +541,24 @@
             gap: 10px;
             flex-wrap: wrap;
         }
+        .baca-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            flex: 1;
+            min-width: 160px;
+        }
         .btn-baca-modal {
             background-color: #00f2fe;
             color: #0b132b;
             padding: 10px 15px;
             border-radius: 8px;
             font-weight: bold;
-            flex: 1;
             text-align: center;
             font-size: 14px;
-            display: inline-block;
+            display: block;
             transition: background 0.2s, transform 0.2s;
+            text-transform: uppercase;
         }
         .btn-baca-modal:hover {
             background-color: #38bdf8;
@@ -567,6 +574,7 @@
             cursor: pointer;
             font-size: 14px;
             transition: all 0.2s;
+            align-self: flex-start;
         }
         .btn-share-modal:hover {
             background-color: rgba(0, 242, 254, 0.2);
@@ -742,7 +750,8 @@
             </div>
             <p id="modalDeskripsi">Blurb buku...</p>
             <div class="modal-buttons">
-                <a href="#" id="btnBaca" class="btn-baca-modal" target="_blank">BACA SEKARANG</a>
+                <!-- Container Tombol Baca Dinamis -->
+                <div id="containerBaca" class="baca-group"></div>
                 <button class="btn-share-modal" onclick="bagikanBuku()">📤 Bagikan</button>
             </div>
             <button class="btn-tutup-modal" onclick="tutupModal()">Tutup</button>
@@ -763,9 +772,9 @@
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
         let allNovelsData = [];
-        let currentActiveLink = "";
         let currentActiveTitle = "";
         let currentActiveGenre = "";
+        let currentActivePlatforms = [];
 
         async function loadPublicData() {
             await loadSettings();
@@ -858,7 +867,6 @@
             let tamatCount = 0;
 
             novelList.forEach(novel => {
-                let linkTarget = novel.link ? novel.link : "#";
                 let coverImg = novel.cover_url ? novel.cover_url : 'https://via.placeholder.com/150x220/1e3a8a/00f2fe?text=Cover';
                 let isCompleted = novel.status && novel.status.toLowerCase() === 'completed';
                 
@@ -873,19 +881,12 @@
                 imgEl.alt = novel.title || "Cover";
                 imgEl.className = 'novel-cover';
                 
-                imgEl.dataset.title = novel.title || "";
-                imgEl.dataset.genre = novel.genre || "-";
-                imgEl.dataset.app = novel.aplikasi || "-"; 
-                imgEl.dataset.description = novel.description || "Blurb belum tersedia.";
-                imgEl.dataset.link = linkTarget;
-                
                 coverContainer.addEventListener('click', function() {
                     bukaModal(
-                        imgEl.dataset.title,
-                        imgEl.dataset.genre,
-                        imgEl.dataset.app,
-                        imgEl.dataset.description,
-                        imgEl.dataset.link
+                        novel.title || "",
+                        novel.genre || "-",
+                        novel.description || "Blurb belum tersedia.",
+                        novel.platforms
                     );
                 });
 
@@ -932,11 +933,22 @@
                 renderNovels(allNovelsData);
                 return;
             }
-            const filtered = allNovelsData.filter(novel => 
-                (novel.title && novel.title.toLowerCase().includes(query)) ||
-                (novel.genre && novel.genre.toLowerCase().includes(query)) ||
-                (novel.aplikasi && novel.aplikasi.toLowerCase().includes(query))
-            );
+            const filtered = allNovelsData.filter(novel => {
+                const matchTitle = novel.title && novel.title.toLowerCase().includes(query);
+                const matchGenre = novel.genre && novel.genre.toLowerCase().includes(query);
+                
+                let matchApp = false;
+                if (novel.platforms) {
+                    try {
+                        const platformsArr = typeof novel.platforms === 'string' ? JSON.parse(novel.platforms) : novel.platforms;
+                        if (Array.isArray(platformsArr)) {
+                            matchApp = platformsArr.some(p => p.name && p.name.toLowerCase().includes(query));
+                        }
+                    } catch(e) {}
+                }
+
+                return matchTitle || matchGenre || matchApp;
+            });
             renderNovels(filtered);
         }
 
@@ -971,17 +983,64 @@
             indicator.classList.remove('visible');
         }
 
-        function bukaModal(judul, genre, app, deskripsi, linkBaca) {
+        function bukaModal(judul, genre, deskripsi, platformsData) {
             currentActiveTitle = judul;
             currentActiveGenre = genre;
-            currentActiveLink = linkBaca;
+
+            // Parse Platforms
+            let platformsArr = [];
+            if (platformsData) {
+                try {
+                    platformsArr = typeof platformsData === 'string' ? JSON.parse(platformsData) : platformsData;
+                } catch(e) {
+                    platformsArr = [];
+                }
+            }
+            currentActivePlatforms = platformsArr;
 
             document.getElementById('modalJudul').innerText = judul;
             document.getElementById('modalGenre').innerText = genre;
-            document.getElementById('modalApp').innerText = app;
             document.getElementById('modalDeskripsi').innerText = deskripsi;
-            document.getElementById('btnBaca').href = linkBaca;
-            
+
+            // Tampilkan Teks Nama Aplikasi & Render Tombol Baca
+            let containerBaca = document.getElementById('containerBaca');
+            containerBaca.innerHTML = '';
+
+            if (platformsArr && platformsArr.length > 0) {
+                // Tampilkan gabungan nama platform di info "Aplikasi:"
+                const appNames = platformsArr.map(p => p.name).join(', ');
+                document.getElementById('modalApp').innerText = appNames;
+
+                if (platformsArr.length === 1) {
+                    // KONDISI 1 PLATFORM: 1 Tombol BACA SEKARANG
+                    let btn = document.createElement('a');
+                    btn.href = platformsArr[0].url || '#';
+                    btn.target = '_blank';
+                    btn.className = 'btn-baca-modal';
+                    btn.innerText = 'BACA SEKARANG';
+                    containerBaca.appendChild(btn);
+                } else {
+                    // KONDISI >1 PLATFORM: Opsi B (Tombol Per Platform)
+                    platformsArr.forEach(p => {
+                        let btn = document.createElement('a');
+                        btn.href = p.url || '#';
+                        btn.target = '_blank';
+                        btn.className = 'btn-baca-modal';
+                        btn.innerText = `BACA DI ${p.name.toUpperCase()}`;
+                        containerBaca.appendChild(btn);
+                    });
+                }
+            } else {
+                document.getElementById('modalApp').innerText = '-';
+                let btn = document.createElement('a');
+                btn.href = '#';
+                btn.className = 'btn-baca-modal';
+                btn.innerText = 'BACA SEKARANG';
+                btn.style.opacity = '0.5';
+                btn.style.pointerEvents = 'none';
+                containerBaca.appendChild(btn);
+            }
+
             let modal = document.getElementById('modalPopup');
             modal.style.display = 'flex';
             setTimeout(() => {
@@ -998,20 +1057,21 @@
         }
 
         function bagikanBuku() {
+            let shareUrl = window.location.href;
+            if (currentActivePlatforms && currentActivePlatforms.length > 0) {
+                shareUrl = currentActivePlatforms[0].url || window.location.href;
+            }
+
             if (navigator.share) {
                 navigator.share({
                     title: currentActiveTitle,
                     text: `Yuk baca novel "${currentActiveTitle}" (Genre: ${currentActiveGenre}) di NovelLink!`,
-                    url: currentActiveLink && currentActiveLink !== "#" ? currentActiveLink : window.location.href
+                    url: shareUrl
                 }).catch((error) => console.log('Gagal membagikan:', error));
             } else {
-                if (currentActiveLink && currentActiveLink !== "#") {
-                    navigator.clipboard.writeText(currentActiveLink).then(() => {
-                        alert("✅ Link berhasil disalin ke clipboard!");
-                    });
-                } else {
-                    alert("⚠️ Tidak ada link baca yang tersedia untuk dibagikan.");
-                }
+                navigator.clipboard.writeText(shareUrl).then(() => {
+                    alert("✅ Link berhasil disalin ke clipboard!");
+                });
             }
         }
 
