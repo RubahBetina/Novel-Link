@@ -1,758 +1,1607 @@
 <!DOCTYPE html>
+
 <html lang="id">
+
 <head>
+
     <meta charset="UTF-8">
+
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
     <title>Admin Panel - NovelLink</title>
+
     <!-- Supabase JS SDK v2 -->
+
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Cropper.js CSS & JS (Untuk Pop-up Crop Grid) -->
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.css" />
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/cropperjs/1.5.13/cropper.min.js"></script>
+
     <style>
+
         :root {
+
             --bg-color: #0f172a;
+
             --card-bg: #1e293b;
+
             --border-color: #334155;
+
             --text-main: #f8fafc;
+
             --text-muted: #94a3b8;
+
             --accent: #38bdf8;
+
             --accent-hover: #0ea5e9;
+
             --danger: #f43f5e;
+
             --danger-hover: #e11d48;
+
         }
+
         * {
+
             box-sizing: border-box;
+
             margin: 0;
+
             padding: 0;
+
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+
         }
+
         body {
+
             background-color: var(--bg-color);
+
             color: var(--text-main);
+
             padding: 20px;
+
             line-height: 1.5;
+
         }
+
         .container {
+
             max-width: 900px;
+
             margin: 0 auto;
+
         }
+
         header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-bottom: 30px;
+
             border-bottom: 1px solid var(--border-color);
+
             padding-bottom: 15px;
+
         }
+
         h1 {
+
             font-size: 1.5rem;
+
             color: var(--accent);
+
         }
+
         .btn {
+
             background-color: var(--accent);
+
             color: #0f172a;
+
             border: none;
+
             padding: 8px 16px;
+
             border-radius: 6px;
+
             cursor: pointer;
+
             font-weight: 600;
+
             transition: background 0.2s;
+
         }
+
         .btn:hover {
+
             background-color: var(--accent-hover);
+
         }
+
         .btn-danger {
+
             background-color: var(--danger);
+
             color: #fff;
+
         }
+
         .btn-danger:hover {
+
             background-color: var(--danger-hover);
+
         }
+
         .btn-secondary {
+
             background-color: transparent;
+
             color: var(--text-muted);
+
             border: 1px solid var(--border-color);
+
         }
+
         .btn-secondary:hover {
+
             color: var(--text-main);
+
             border-color: var(--text-main);
+
         }
+
         section {
+
             background-color: var(--card-bg);
+
             border: 1px solid var(--border-color);
+
             border-radius: 8px;
+
             padding: 20px;
+
             margin-bottom: 25px;
+
         }
+
         h2 {
+
             font-size: 1.1rem;
+
             margin-bottom: 15px;
+
             color: var(--text-main);
+
             display: flex;
+
             align-items: center;
+
             gap: 8px;
+
         }
+
         .form-group {
+
             margin-bottom: 15px;
+
         }
+
         label {
+
             display: block;
+
             font-size: 0.85rem;
+
             color: var(--text-muted);
+
             margin-bottom: 5px;
+
         }
+
         input[type="text"],
+
         input[type="url"],
+
         input[type="email"],
+
         input[type="password"],
+
         input[type="file"],
+
         textarea,
+
         select {
+
             width: 100%;
+
             background-color: #0f172a;
+
             border: 1px solid var(--border-color);
+
             border-radius: 6px;
+
             padding: 10px;
+
             color: var(--text-main);
+
             font-size: 0.95rem;
+
         }
+
         input:focus, textarea:focus, select:focus {
+
             outline: none;
+
             border-color: var(--accent);
+
         }
+
         textarea {
+
             resize: vertical;
+
             height: 100px;
+
         }
+
         .grid-2 {
+
             display: grid;
+
             grid-template-columns: 1fr 1fr;
+
             gap: 15px;
+
         }
+
         .admin-list {
+
             display: flex;
+
             flex-direction: column;
+
             gap: 12px;
+
         }
+
         .admin-item {
+
             background-color: #0f172a;
+
             border: 1px solid var(--border-color);
+
             border-radius: 6px;
+
             padding: 12px 15px;
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
         }
+
         .admin-info h3 {
+
             font-size: 1rem;
+
             margin-bottom: 3px;
+
         }
+
         .admin-info p {
+
             font-size: 0.8rem;
+
             color: var(--text-muted);
+
             word-break: break-all;
+
         }
+
         .admin-actions {
+
             display: flex;
+
             gap: 8px;
+
         }
+
         .modal {
+
             display: none;
+
             position: fixed;
+
             top: 0; left: 0; width: 100%; height: 100%;
+
             background-color: rgba(0,0,0,0.7);
+
             justify-content: center;
+
             align-items: center;
+
             padding: 20px;
+
             z-index: 100;
+
         }
+
         .modal-content {
+
             background-color: var(--card-bg);
+
             border: 1px solid var(--border-color);
+
             border-radius: 8px;
+
             width: 100%;
+
             max-width: 500px;
+
             padding: 25px;
+
             max-height: 90vh;
+
             overflow-y: auto;
+
         }
+
         .modal-header {
+
             display: flex;
+
             justify-content: space-between;
+
             align-items: center;
+
             margin-bottom: 20px;
+
         }
+
         .close-btn {
+
             background: none;
+
             border: none;
+
             color: var(--text-muted);
+
             font-size: 1.2rem;
+
             cursor: pointer;
+
         }
+
         .close-btn:hover {
+
             color: var(--text-main);
+
         }
+
         .toast {
+
             position: fixed;
+
             bottom: 20px;
+
             right: 20px;
+
             background-color: #10b981;
+
             color: white;
+
             padding: 10px 20px;
+
             border-radius: 6px;
+
             font-weight: 600;
+
             box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+
             display: none;
+
             z-index: 1000;
+
         }
+
         .preview-img {
+
             max-width: 80px;
+
             max-height: 100px;
+
             margin-top: 5px;
+
             border-radius: 4px;
+
             display: none;
-        }
-        .preview-logo {
-            width: 60px;
-            height: 60px;
-            border-radius: 50%;
+
             object-fit: cover;
-            margin-top: 5px;
-            display: none;
-            border: 1px solid var(--border-color);
+
         }
+
+        .preview-logo {
+
+            width: 60px;
+
+            height: 60px;
+
+            border-radius: 50%;
+
+            object-fit: cover;
+
+            margin-top: 5px;
+
+            display: none;
+
+            border: 1px solid var(--border-color);
+
+        }
+
         .hidden { display: none !important; }
+
         .error-text { color: var(--danger); font-size: 0.85rem; margin-top: 5px; }
+
+        /* Style untuk Pop-up Cropper Grid */
+
+        .crop-container {
+
+            width: 100%;
+
+            max-height: 350px;
+
+            min-height: 250px;
+
+            background: #000;
+
+            margin-bottom: 15px;
+
+            overflow: hidden;
+
+            border-radius: 6px;
+
+        }
+
+        .crop-container img {
+
+            max-width: 100%;
+
+            display: block;
+
+        }
+
+        .crop-toolbar {
+
+            display: flex;
+
+            gap: 6px;
+
+            justify-content: center;
+
+            margin-bottom: 15px;
+
+            flex-wrap: wrap;
+
+        }
+
+        .btn-tool {
+
+            background-color: #0f172a;
+
+            border: 1px solid var(--border-color);
+
+            color: var(--text-main);
+
+            padding: 6px 12px;
+
+            border-radius: 4px;
+
+            cursor: pointer;
+
+            font-size: 0.8rem;
+
+        }
+
+        .btn-tool:hover {
+
+            background-color: var(--accent);
+
+            color: #0f172a;
+
+        }
+
     </style>
+
 </head>
+
 <body>
+
     <!-- 1. SECTION LOGIN -->
+
     <div class="container" id="loginSection">
+
         <section style="max-width: 400px; margin: 80px auto;">
+
             <h2>Admin Login NovelLink</h2>
+
             <div id="loginError" class="error-text"></div>
+
             <form id="loginForm" onsubmit="handleLogin(event)">
+
                 <div class="form-group">
+
                     <label>Email Admin</label>
+
                     <input type="email" id="loginEmail" required placeholder="email@admin.com">
+
                 </div>
+
                 <div class="form-group">
+
                     <label>Password</label>
+
                     <input type="password" id="loginPassword" required placeholder="••••••••">
+
                 </div>
+
                 <button type="submit" class="btn" style="width: 100%;">Masuk ke Panel</button>
+
             </form>
+
         </section>
+
     </div>
 
     <!-- 2. MAIN DASHBOARD ADMIN -->
+
     <div class="container hidden" id="adminDashboard">
+
         <header>
+
             <h1>NovelLink Admin Panel</h1>
+
             <div style="display: flex; gap: 10px;">
+
                 <button class="btn btn-secondary" onclick="exportData()">Backup Data</button>
+
                 <button class="btn btn-danger" onclick="handleLogout()">Logout</button>
+
             </div>
+
         </header>
 
         <!-- PENGATURAN WEBSITE & LOGO -->
+
         <section>
+
             <h2>Pengaturan Website & Logo</h2>
+
             <form id="settingsForm" onsubmit="saveSettings(event)">
+
                 <div class="form-group">
+
                     <label>Judul Website / Logo Text</label>
+
                     <input type="text" id="siteTitle" placeholder="Misal: NovelLink">
+
                 </div>
+
                 <div class="form-group">
+
                     <label>Upload Logo Bulat Website (Opsional)</label>
+
                     <input type="file" id="logoFile" accept="image/*" onchange="previewLogoImage(event)">
+
                     <img id="logoPreview" class="preview-logo" alt="Preview Logo">
+
                 </div>
+
                 <button type="submit" class="btn">Simpan Pengaturan Website</button>
+
             </form>
+
         </section>
 
         <!-- MANAJEMEN MEDIA SOSIAL & KONTAK -->
+
         <section>
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+
                 <h2 style="margin-bottom: 0;">Pengaturan Media Sosial & Kontak</h2>
+
                 <button class="btn" onclick="openAddSocialModal()">+ Tambah Medsos</button>
+
             </div>
+
             <div class="admin-list" id="socialAdminList"></div>
+
         </section>
 
         <!-- PENGATURAN POP-UP NOTIFIKASI -->
+
         <section>
+
             <h2>Pengumuman / Pop-Up Notifikasi</h2>
+
             <form id="popupForm" onsubmit="savePopup(event)">
+
                 <div class="form-group">
+
                     <label>Teks Pengumuman (Kosongkan jika tidak ingin ditampilkan)</label>
+
                     <textarea id="popupText" placeholder="Tulis pengumuman penting..."></textarea>
+
                 </div>
+
                 <button type="submit" class="btn">Simpan Pop-Up</button>
+
             </form>
+
         </section>
 
         <!-- PENGATURAN PERINGATAN / HAK CIPTA -->
+
         <section>
+
             <h2>Pemberitahuan Hak Cipta & Peringatan</h2>
+
             <form id="disclaimerForm" onsubmit="saveDisclaimer(event)">
+
                 <div class="form-group">
+
                     <label>Teks Peringatan / Hak Cipta</label>
+
                     <textarea id="disclaimerText" placeholder="Tulis teks pemberitahuan..."></textarea>
+
                 </div>
+
                 <button type="submit" class="btn">Simpan Peringatan</button>
+
             </form>
+
         </section>
 
         <!-- MANAJEMEN NOVEL -->
+
         <section>
+
             <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+
                 <h2 style="margin-bottom: 0;">Daftar Novel</h2>
+
                 <button class="btn" onclick="openAddNovelModal()">+ Tambah Novel Baru</button>
+
             </div>
+
             <div class="admin-list" id="novelAdminList"></div>
+
         </section>
+
     </div>
 
     <!-- MODAL TAMBAH / EDIT MEDIA SOSIAL -->
+
     <div class="modal" id="socialModal">
+
         <div class="modal-content">
+
             <div class="modal-header">
+
                 <h3 id="socialModalTitle">Tambah Media Sosial</h3>
+
                 <button class="close-btn" onclick="closeSocialModal()">&times;</button>
+
             </div>
+
             <form id="socialFormModal" onsubmit="saveSocialItem(event)">
+
                 <input type="hidden" id="socialId">
+
                 <div class="form-group">
+
                     <label>Nama Platform (Contoh: TikTok, WhatsApp)</label>
+
                     <input type="text" id="socialName" required>
+
                 </div>
+
                 <div class="form-group">
+
                     <label>Link / URL Tujuan</label>
+
                     <input type="url" id="socialLinkUrl" required>
+
                 </div>
+
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+
                     <button type="button" class="btn btn-secondary" onclick="closeSocialModal()">Batal</button>
+
                     <button type="submit" class="btn">Simpan</button>
+
                 </div>
+
             </form>
+
         </div>
+
     </div>
 
     <!-- MODAL TAMBAH / EDIT NOVEL -->
+
     <div class="modal" id="novelModal">
+
         <div class="modal-content">
+
             <div class="modal-header">
+
                 <h3 id="novelModalTitle">Tambah Novel</h3>
+
                 <button class="close-btn" onclick="closeNovelModal()">&times;</button>
+
             </div>
+
             <form id="novelForm" onsubmit="saveNovel(event)">
+
                 <input type="hidden" id="novelId">
+
                 <div class="form-group">
+
                     <label>Judul Novel</label>
+
                     <input type="text" id="novelTitle" required>
+
                 </div>
+
                 <div class="grid-2">
+
                     <div class="form-group">
+
                         <label>Genre / Kategori</label>
+
                         <input type="text" id="novelGenre" required>
+
                     </div>
+
                     <div class="form-group">
+
                         <label>Status</label>
+
                         <select id="novelStatus">
+
                             <option value="Ongoing">Ongoing</option>
+
                             <option value="Completed">Completed</option>
+
                         </select>
+
                     </div>
+
                 </div>
+
                 <div class="grid-2">
+
                     <div class="form-group">
+
                         <label>Aplikasi</label>
+
                         <input type="text" id="novelApp" required>
+
                     </div>
+
                     <div class="form-group">
+
                         <label>Link Baca (URL Tujuan)</label>
+
                         <input type="url" id="novelLink" required>
+
                     </div>
+
                 </div>
+
                 <div class="form-group">
-                    <label>Upload File Cover Gambar (Otomatis Crop Rasio 2:3)</label>
-                    <input type="file" id="novelCoverFile" accept="image/*" onchange="previewImage(event)">
+
+                    <label>Upload File Cover Gambar (Rasio 3:4)</label>
+
+                    <input type="file" id="novelCoverFile" accept="image/*" onchange="openCropModal(event)">
+
                     <img id="imgPreview" class="preview-img" alt="Preview Cover">
+
                 </div>
+
                 <div class="form-group">
+
                     <label>Blurb / Sinopsis</label>
+
                     <textarea id="novelSynopsis" required></textarea>
+
                 </div>
+
                 <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 20px;">
+
                     <button type="button" class="btn btn-secondary" onclick="closeNovelModal()">Batal</button>
+
                     <button type="submit" class="btn">Simpan Novel</button>
+
                 </div>
+
             </form>
+
         </div>
+
+    </div>
+
+    <!-- MODAL CROPPER GRID GAMBAR COVER -->
+
+    <div class="modal" id="cropModal">
+
+        <div class="modal-content" style="max-width: 550px;">
+
+            <div class="modal-header">
+
+                <h3>Crop Cover Novel (Grid 3:4)</h3>
+
+                <button class="close-btn" onclick="closeCropModal()">&times;</button>
+
+            </div>
+
+            
+
+            <div class="crop-container">
+
+                <img id="imageToCrop" src="" alt="Gambar untuk Crop">
+
+            </div>
+
+            <div class="crop-toolbar">
+
+                <button type="button" class="btn-tool" onclick="rotateCropper(-90)">↺ Putar Kiri</button>
+
+                <button type="button" class="btn-tool" onclick="rotateCropper(90)">↻ Putar Kanan</button>
+
+                <button type="button" class="btn-tool" onclick="zoomCropper(0.1)">🔍 Zoom In</button>
+
+                <button type="button" class="btn-tool" onclick="zoomCropper(-0.1)">🔍 Zoom Out</button>
+
+                <button type="button" class="btn-tool" onclick="resetCropper()">↺ Reset</button>
+
+            </div>
+
+            <div style="display: flex; justify-content: flex-end; gap: 10px;">
+
+                <button type="button" class="btn btn-secondary" onclick="closeCropModal()">Batal</button>
+
+                <button type="button" class="btn" onclick="confirmCrop()">Potong & Gunakan</button>
+
+            </div>
+
+        </div>
+
     </div>
 
     <div class="toast" id="toastMsg">Perubahan berhasil disimpan!</div>
 
     <script>
+
         // --- INISIALISASI SUPABASE ---
+
         const SUPABASE_URL = 'https://azqghdrvbzauwavkeypt.supabase.co';
+
         const SUPABASE_ANON_KEY = 'sb_publishable_0gfmGBWUDodZwDuYofydmg_JQL-7zNa';
+
         const { createClient } = supabase;
+
         const _supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        
+
         let currentLogoFile = null;
+
         let currentCoverFile = null;
+
         let existingLogoUrl = "";
 
+        // --- VARIABEL CROPPER.JS ---
+
+        let cropperInstance = null;
+
+        let croppedBlobData = null;
+
         // --- CEK SESI OTENTIKASI ---
+
         async function checkAuth() {
+
             const { data: { session } } = await _supabase.auth.getSession();
+
             if (session) {
+
                 document.getElementById('loginSection').classList.add('hidden');
+
                 document.getElementById('adminDashboard').classList.remove('hidden');
+
                 loadAllData();
+
             } else {
+
                 document.getElementById('loginSection').classList.remove('hidden');
+
                 document.getElementById('adminDashboard').classList.add('hidden');
+
             }
+
         }
+
         checkAuth();
+
         _supabase.auth.onAuthStateChange((event, session) => {
+
             checkAuth();
+
         });
 
         async function handleLogin(e) {
+
             e.preventDefault();
+
             const email = document.getElementById('loginEmail').value;
+
             const password = document.getElementById('loginPassword').value;
+
             const errorEl = document.getElementById('loginError');
+
             errorEl.textContent = '';
+
             const { error } = await _supabase.auth.signInWithPassword({ email, password });
+
             if (error) {
+
                 errorEl.textContent = error.message;
+
             }
+
         }
 
         async function handleLogout() {
+
             await _supabase.auth.signOut();
+
         }
 
         function showToast(msg) {
+
             const t = document.getElementById('toastMsg');
+
             t.innerText = msg;
+
             t.style.display = 'block';
+
             setTimeout(() => { t.style.display = 'none'; }, 2500);
+
         }
 
         // --- LOAD DATA DARI SUPABASE ---
+
         async function loadAllData() {
+
             await loadSettings();
+
             await loadSocials();
+
             await loadNovels();
+
         }
 
         // 1. Settings & Logo
+
         async function loadSettings() {
+
             const { data, error } = await _supabase.from('settings').select('*').limit(1).single();
+
             if (data) {
+
                 document.getElementById('siteTitle').value = data.site_title || "";
+
                 document.getElementById('popupText').value = data.popup_text || "";
+
                 document.getElementById('disclaimerText').value = data.disclaimer_text || "";
+
                 if (data.logo_url) {
+
                     existingLogoUrl = data.logo_url;
+
                     const prev = document.getElementById('logoPreview');
+
                     prev.src = data.logo_url;
+
                     prev.style.display = 'block';
+
                 }
+
             }
+
         }
 
         function previewLogoImage(event) {
+
             const file = event.target.files[0];
+
             if (file) {
+
                 currentLogoFile = file;
+
                 const prev = document.getElementById('logoPreview');
+
                 prev.src = URL.createObjectURL(file);
+
                 prev.style.display = 'block';
+
             }
+
         }
 
         async function saveSettings(e) {
+
             e.preventDefault();
+
             let logoUrl = existingLogoUrl;
+
             if (currentLogoFile) {
+
                 const fileName = `logo_${Date.now()}.${currentLogoFile.name.split('.').pop()}`;
+
                 const { error: uploadError } = await _supabase.storage.from('covers').upload(fileName, currentLogoFile);
+
                 if (uploadError) {
+
                     alert('Gagal upload logo: ' + uploadError.message);
+
                     return;
+
                 }
+
                 const { data } = _supabase.storage.from('covers').getPublicUrl(fileName);
+
                 logoUrl = data.publicUrl;
+
             }
+
             const payload = {
+
                 id: 1,
+
                 site_title: document.getElementById('siteTitle').value,
+
                 logo_url: logoUrl,
+
                 popup_text: document.getElementById('popupText').value,
+
                 disclaimer_text: document.getElementById('disclaimerText').value
+
             };
+
             const { error } = await _supabase.from('settings').upsert(payload);
+
             if (error) {
+
                 alert('Gagal menyimpan: ' + error.message);
+
             } else {
+
                 existingLogoUrl = logoUrl;
+
                 currentLogoFile = null;
+
                 showToast("Pengaturan website berhasil disimpan!");
+
             }
+
         }
 
         async function savePopup(e) {
+
             e.preventDefault();
+
             const { error } = await _supabase.from('settings').upsert({
+
                 id: 1,
+
                 popup_text: document.getElementById('popupText').value
+
             }, { onConflict: 'id' });
+
             if (!error) showToast("Pop-up berhasil disimpan!");
+
         }
 
         async function saveDisclaimer(e) {
+
             e.preventDefault();
+
             const { error } = await _supabase.from('settings').upsert({
+
                 id: 1,
+
                 disclaimer_text: document.getElementById('disclaimerText').value
+
             }, { onConflict: 'id' });
+
             if (!error) showToast("Disclaimer berhasil disimpan!");
+
         }
 
         // 2. Social Links
+
         async function loadSocials() {
+
             const { data } = await _supabase.from('social_links').select('*').order('id', { ascending: true });
+
             const listEl = document.getElementById('socialAdminList');
+
             listEl.innerHTML = '';
+
             if (!data || data.length === 0) {
+
                 listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 10px;">Belum ada media sosial.</p>';
+
                 return;
+
             }
+
             data.forEach((item) => {
+
                 const div = document.createElement('div');
+
                 div.className = 'admin-item';
+
                 div.innerHTML = `
+
                     <div class="admin-info">
+
                         <h3>${item.platform}</h3>
+
                         <p>${item.url}</p>
+
                     </div>
+
                     <div class="admin-actions">
+
                         <button class="btn btn-secondary" onclick="openEditSocialModal(${item.id}, '${item.platform}', '${item.url}')">Edit</button>
+
                         <button class="btn btn-danger" onclick="deleteSocialItem(${item.id})">Hapus</button>
+
                     </div>
+
                 `;
+
                 listEl.appendChild(div);
+
             });
+
         }
 
         function openAddSocialModal() {
+
             document.getElementById('socialModalTitle').innerText = "Tambah Media Sosial";
+
             document.getElementById('socialId').value = "";
+
             document.getElementById('socialFormModal').reset();
+
             document.getElementById('socialModal').style.display = 'flex';
+
         }
 
         function openEditSocialModal(id, platform, url) {
+
             document.getElementById('socialModalTitle').innerText = "Edit Media Sosial";
+
             document.getElementById('socialId').value = id;
+
             document.getElementById('socialName').value = platform;
+
             document.getElementById('socialLinkUrl').value = url;
+
             document.getElementById('socialModal').style.display = 'flex';
+
         }
 
         function closeSocialModal() {
+
             document.getElementById('socialModal').style.display = 'none';
+
         }
 
         async function saveSocialItem(e) {
+
             e.preventDefault();
+
             const id = document.getElementById('socialId').value;
+
             const socialData = {
+
                 platform: document.getElementById('socialName').value,
+
                 url: document.getElementById('socialLinkUrl').value
+
             };
+
             if (id === "") {
+
                 await _supabase.from('social_links').insert([socialData]);
+
             } else {
+
                 await _supabase.from('social_links').update(socialData).eq('id', id);
+
             }
+
             closeSocialModal();
+
             loadSocials();
+
             showToast("Media sosial diperbarui!");
+
         }
 
         async function deleteSocialItem(id) {
+
             if (confirm("Yakin ingin menghapus media sosial ini?")) {
+
                 await _supabase.from('social_links').delete().eq('id', id);
+
                 loadSocials();
+
                 showToast("Media sosial dihapus.");
+
             }
+
         }
 
-        // 3. Novels Management & Auto-Crop Cover
-        async function loadNovels() {
-            const { data } = await _supabase.from('novel').select('*').order('id', { ascending: false });
-            const listEl = document.getElementById('novelAdminList');
-            listEl.innerHTML = '';
-            if (!data || data.length === 0) {
-                listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 10px;">Belum ada novel.</p>';
-                return;
+        // --- 3. CROPPER & NOVELS MANAGEMENT ---
+
+        function openCropModal(event) {
+
+            const files = event.target.files;
+
+            if (!files || files.length === 0) return;
+
+            const file = files[0];
+
+            const reader = new FileReader();
+
+            reader.onload = function(e) {
+
+                const imageEl = document.getElementById('imageToCrop');
+
+                imageEl.src = e.target.result;
+
+                // Tampilkan Modal Crop
+
+                document.getElementById('cropModal').style.display = 'flex';
+
+                if (cropperInstance) {
+
+                    cropperInstance.destroy();
+
+                }
+
+                cropperInstance = new Cropper(imageEl, {
+
+                    aspectRatio: 1086 / 1448, // Rasio Standar Cover Novel 3:4
+
+                    viewMode: 1,
+
+                    dragMode: 'move',
+
+                    autoCropArea: 0.9,
+
+                    guides: true, // Grid panduan aktif
+
+                    center: true,
+
+                    highlight: true,
+
+                    cropBoxMovable: true,
+
+                    cropBoxResizable: true,
+
+                    background: false
+
+                });
+
+            };
+
+            reader.readAsDataURL(file);
+
+        }
+
+        function closeCropModal() {
+
+            document.getElementById('cropModal').style.display = 'none';
+
+            if (cropperInstance) {
+
+                cropperInstance.destroy();
+
+                cropperInstance = null;
+
             }
-            data.forEach((novel) => {
-                const item = document.createElement('div');
-                item.className = 'admin-item';
-                item.innerHTML = `
-                    <div class="admin-info">
-                        <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent);">[${novel.status}]</span></h3>
-                        <p>Genre: ${novel.genre || '-'} | Aplikasi: ${novel.aplikasi || '-'}</p>
-                        <p>Link: ${novel.link || '-'}</p>
-                    </div>
-                    <div class="admin-actions">
-                        <button class="btn btn-secondary" onclick='openEditNovelModal(${JSON.stringify(novel)})'>Edit</button>
-                        <button class="btn btn-danger" onclick="deleteNovel(${novel.id})">Hapus</button>
-                    </div>
-                `;
-                listEl.appendChild(item);
+
+            document.getElementById('novelCoverFile').value = '';
+
+        }
+
+        function rotateCropper(degree) {
+
+            if (cropperInstance) cropperInstance.rotate(degree);
+
+        }
+
+        function zoomCropper(ratio) {
+
+            if (cropperInstance) cropperInstance.zoom(ratio);
+
+        }
+
+        function resetCropper() {
+
+            if (cropperInstance) cropperInstance.reset();
+
+        }
+
+        function confirmCrop() {
+
+            if (!cropperInstance) return;
+
+            const canvas = cropperInstance.getCroppedCanvas({
+
+                width: 1086,
+
+                height: 1448,
+
+                imageSmoothingEnabled: true,
+
+                imageSmoothingQuality: 'high'
+
             });
+
+            // Tampilkan preview hasil potong
+
+            const preview = document.getElementById('imgPreview');
+
+            preview.src = canvas.toDataURL('image/jpeg', 0.9);
+
+            preview.style.display = 'block';
+
+            // Simpan Blob untuk upload ke Supabase
+
+            canvas.toBlob((blob) => {
+
+                croppedBlobData = blob;
+
+            }, 'image/jpeg', 0.88);
+
+            closeCropModal();
+
+        }
+
+        async function loadNovels() {
+
+            const { data } = await _supabase.from('novel').select('*').order('id', { ascending: false });
+
+            const listEl = document.getElementById('novelAdminList');
+
+            listEl.innerHTML = '';
+
+            if (!data || data.length === 0) {
+
+                listEl.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 10px;">Belum ada novel.</p>';
+
+                return;
+
+            }
+
+            data.forEach((novel) => {
+
+                const item = document.createElement('div');
+
+                item.className = 'admin-item';
+
+                item.innerHTML = `
+
+                    <div class="admin-info">
+
+                        <h3>${novel.title} <span style="font-size: 0.75rem; color: var(--accent);">[${novel.status}]</span></h3>
+
+                        <p>Genre: ${novel.genre || '-'} | Aplikasi: ${novel.aplikasi || '-'}</p>
+
+                        <p>Link: ${novel.link || '-'}</p>
+
+                    </div>
+
+                    <div class="admin-actions">
+
+                        <button class="btn btn-secondary" onclick='openEditNovelModal(${JSON.stringify(novel)})'>Edit</button>
+
+                        <button class="btn btn-danger" onclick="deleteNovel(${novel.id})">Hapus</button>
+
+                    </div>
+
+                `;
+
+                listEl.appendChild(item);
+
+            });
+
         }
 
         function openAddNovelModal() {
+
             document.getElementById('novelModalTitle').innerText = "Tambah Novel Baru";
+
             document.getElementById('novelId').value = "";
+
             document.getElementById('novelForm').reset();
+
             document.getElementById('imgPreview').style.display = 'none';
-            currentCoverFile = null;
+
+            croppedBlobData = null;
+
             document.getElementById('novelModal').style.display = 'flex';
+
         }
 
         function openEditNovelModal(novel) {
+
             document.getElementById('novelModalTitle').innerText = "Edit Novel";
+
             document.getElementById('novelId').value = novel.id;
+
             document.getElementById('novelTitle').value = novel.title;
+
             document.getElementById('novelGenre').value = novel.genre || "";
+
             document.getElementById('novelApp').value = novel.aplikasi || "";
+
             document.getElementById('novelStatus').value = novel.status;
+
             document.getElementById('novelSynopsis').value = novel.description || novel.blurb || "";
+
             document.getElementById('novelLink').value = novel.link || "";
-            currentCoverFile = null;
+
+            
+
+            croppedBlobData = null; // Reset jika tidak melakukan crop baru
+
             const preview = document.getElementById('imgPreview');
+
             if (novel.cover_url) {
+
                 preview.src = novel.cover_url;
+
                 preview.style.display = 'block';
+
             } else {
+
                 preview.style.display = 'none';
+
             }
+
             document.getElementById('novelModal').style.display = 'flex';
+
         }
 
         function closeNovelModal() {
+
             document.getElementById('novelModal').style.display = 'none';
-        }
 
-        // Fungsi Auto-Crop Gambar ke Rasio 2:3 Menggunakan Canvas
-        function processImageToAspect(file, targetWidth, targetHeight, callback) {
-            const reader = new FileReader();
-            reader.onload = function(e) {
-                const img = new Image();
-                img.onload = function() {
-                    const canvas = document.createElement('canvas');
-                    canvas.width = targetWidth;
-                    canvas.height = targetHeight;
-                    const ctx = canvas.getContext('2d');
-
-                    const sourceWidth = img.width;
-                    const sourceHeight = img.height;
-                    const sourceAspect = sourceWidth / sourceHeight;
-                    const targetAspect = targetWidth / targetHeight;
-
-                    let sX = 0, sY = 0, sW = sourceWidth, sH = sourceHeight;
-
-                    if (sourceAspect > targetAspect) {
-                        sW = sourceHeight * targetAspect;
-                        sX = (sourceWidth - sW) / 2;
-                    } else {
-                        sH = sourceWidth / targetAspect;
-                        sY = (sourceHeight - sH) / 2;
-                    }
-
-                    ctx.drawImage(img, sX, sY, sW, sH, 0, 0, targetWidth, targetHeight);
-
-                    canvas.toBlob((blob) => {
-                        const processedFile = new File([blob], file.name, { type: file.type, lastModified: Date.now() });
-                        const previewUrl = URL.createObjectURL(blob);
-                        callback(processedFile, previewUrl);
-                    }, file.type, 0.9);
-                };
-                img.src = e.target.result;
-            };
-            reader.readAsDataURL(file);
-        }
-
-        function previewImage(event) {
-            const file = event.target.files[0];
-            if (file) {
-                // Otomatis crop ke ukuran 600x900 (Rasio 2:3)
-                processImageToAspect(file, 600, 900, (processedFile, previewUrl) => {
-                    currentCoverFile = processedFile;
-                    const preview = document.getElementById('imgPreview');
-                    preview.src = previewUrl;
-                    preview.style.display = 'block';
-                });
-            }
         }
 
         async function saveNovel(e) {
+
             e.preventDefault();
+
             const id = document.getElementById('novelId').value;
+
             let coverUrl = document.getElementById('imgPreview').src;
-            
-            if (currentCoverFile) {
-                const fileName = `novel_${Date.now()}.${currentCoverFile.name.split('.').pop()}`;
-                const { error: uploadError } = await _supabase.storage.from('covers').upload(fileName, currentCoverFile);
+
+            // Upload gambar baru jika ada hasil crop baru
+
+            if (croppedBlobData) {
+
+                const fileName = `novel_${Date.now()}.jpg`;
+
+                const { error: uploadError } = await _supabase.storage.from('covers').upload(fileName, croppedBlobData, {
+
+                    contentType: 'image/jpeg',
+
+                    upsert: true
+
+                });
+
                 if (uploadError) {
+
                     alert('Gagal upload cover: ' + uploadError.message);
+
                     return;
+
                 }
+
                 const { data } = _supabase.storage.from('covers').getPublicUrl(fileName);
+
                 coverUrl = data.publicUrl;
+
             }
 
             const novelData = {
+
                 title: document.getElementById('novelTitle').value,
+
                 genre: document.getElementById('novelGenre').value,
+
                 aplikasi: document.getElementById('novelApp').value,
+
                 status: document.getElementById('novelStatus').value,
+
                 cover_url: coverUrl,
+
                 description: document.getElementById('novelSynopsis').value,
+
                 link: document.getElementById('novelLink').value
+
             };
 
             if (id === "") {
+
                 await _supabase.from('novel').insert([novelData]);
+
             } else {
+
                 await _supabase.from('novel').update(novelData).eq('id', id);
+
             }
+
             closeNovelModal();
+
             loadNovels();
+
             showToast("Data novel berhasil disimpan ke database!");
+
         }
 
         async function deleteNovel(id) {
+
             if (confirm("Yakin ingin menghapus novel ini?")) {
+
                 await _supabase.from('novel').delete().eq('id', id);
+
                 loadNovels();
+
                 showToast("Novel berhasil dihapus.");
+
             }
+
         }
 
         function exportData() {
+
             alert("Fitur backup langsung dari Supabase bisa diunduh melalui Dashboard Supabase SQL Editor atau Table Editor.");
+
         }
+
     </script>
+
 </body>
+
 </html>
