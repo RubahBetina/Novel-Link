@@ -408,21 +408,15 @@
 
         }
 
-        
-
-        /* --- UKURAN POSTER COVER (Rasio 1086 x 1448 / 3:4) --- */
+        /* Ukuran Poster Cover (Rasio Vertikal) */
 
         .novel-cover {
 
             width: 100%;
 
-            height: auto;
-
-            aspect-ratio: 1086 / 1448;
+            height: 210px;
 
             object-fit: cover;
-
-            object-position: center;
 
             border-radius: 4px;
 
@@ -431,6 +425,16 @@
             cursor: pointer;
 
             background-color: #1a2b4c;
+
+        }
+
+        @media (min-width: 768px) {
+
+            .novel-cover {
+
+                height: 250px;
+
+            }
 
         }
 
